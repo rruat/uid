@@ -55,6 +55,7 @@ export interface UixSettings {
 
 export interface UixDocument {
   version: 1;
+  id: string;
   name: string;
   createdAt: string;
   updatedAt: string;

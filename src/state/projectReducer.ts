@@ -7,7 +7,13 @@ import {
   removeElement,
   updateElement,
 } from "../model/document";
+import { createId } from "../model/id";
 import type { CSSProperties, UixDocument, UixSettings } from "../model/types";
+
+/** Backfills an id for documents saved before the .uix schema added one. */
+function ensureDocumentId(doc: UixDocument): UixDocument {
+  return doc.id ? doc : { ...doc, id: createId("proj") };
+}
 
 export type Mode = "visual" | "code" | "preview";
 
@@ -52,7 +58,7 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
     case "LOAD_DOCUMENT":
       return {
         past: [],
-        present: action.document,
+        present: ensureDocumentId(action.document),
         future: [],
         selectedId: null,
         mode: "visual",

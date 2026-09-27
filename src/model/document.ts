@@ -5,6 +5,7 @@ export function createDefaultDocument(name = "Novo Projeto"): UixDocument {
   const now = new Date().toISOString();
   return {
     version: 1,
+    id: createId("proj"),
     name,
     createdAt: now,
     updatedAt: now,
