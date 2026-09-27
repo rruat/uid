@@ -8,26 +8,46 @@ import { PropertiesPanel, getPropertiesTabs } from "./PropertiesPanel";
 import type { TabKey } from "./PropertiesPanel";
 import "./bottomSheet.css";
 
-type SheetState = "collapsed" | "half" | "expanded";
 type HomeTab = "adicionar" | "projeto";
 
-const COLLAPSED_HEIGHT = 56;
+/**
+ * The "smart bar": always visible (no drag-to-collapse/expand — a fixed
+ * height instead), and pinned to the top edge of the on-screen keyboard via
+ * the visualViewport API instead of the layout viewport, so a focused text
+ * field never ends up hidden behind the keyboard on Android/iOS.
+ */
+function useKeyboardInset(): number {
+  const [inset, setInset] = useState(0);
+
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const update = () => {
+      setInset(Math.max(0, window.innerHeight - vv.height - vv.offsetTop));
+    };
+    update();
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+    };
+  }, []);
+
+  return inset;
+}
 
 export function BottomSheet() {
   const { state } = useProject();
   const selected = state.selectedId ? findElement(state.present.root, state.selectedId) : null;
+  const keyboardInset = useKeyboardInset();
 
-  const [sheetState, setSheetState] = useState<SheetState>("half");
   const [homeTab, setHomeTab] = useState<HomeTab>("adicionar");
   const [propsTab, setPropsTab] = useState<TabKey>("tamanho");
   const [addOverlay, setAddOverlay] = useState(false);
-  const [dragHeight, setDragHeight] = useState<number | null>(null);
-  const dragStart = useRef<{ y: number; height: number } | null>(null);
-  const containerHeightRef = useRef(600);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (selected) setSheetState("half");
     setAddOverlay(false);
     setPropsTab("tamanho");
   }, [selected?.id]);
@@ -39,59 +59,10 @@ export function BottomSheet() {
     scrollRef.current?.scrollTo({ top: 0 });
   }, [propsTab, homeTab]);
 
-  const heightFor = (s: SheetState) => {
-    const vh = containerHeightRef.current;
-    if (s === "collapsed") return COLLAPSED_HEIGHT;
-    if (s === "half") return Math.round(vh * 0.42);
-    return Math.round(vh * 0.85);
-  };
-
-  const onDragStart = (e: React.PointerEvent) => {
-    (e.target as Element).setPointerCapture?.(e.pointerId);
-    const parent = (e.currentTarget as HTMLElement).closest(".uid-main") as HTMLElement | null;
-    if (parent) containerHeightRef.current = parent.clientHeight;
-    dragStart.current = { y: e.clientY, height: heightFor(sheetState) };
-  };
-
-  const onDragMove = (e: React.PointerEvent) => {
-    if (!dragStart.current) return;
-    const delta = dragStart.current.y - e.clientY;
-    const next = Math.min(heightFor("expanded"), Math.max(COLLAPSED_HEIGHT, dragStart.current.height + delta));
-    setDragHeight(next);
-  };
-
-  const onDragEnd = () => {
-    if (dragHeight === null) {
-      dragStart.current = null;
-      return;
-    }
-    const vh = containerHeightRef.current;
-    const collapsedMid = (COLLAPSED_HEIGHT + heightFor("half")) / 2;
-    const halfMid = (heightFor("half") + heightFor("expanded")) / 2;
-    let next: SheetState = "collapsed";
-    if (dragHeight > halfMid) next = "expanded";
-    else if (dragHeight > collapsedMid) next = "half";
-    setSheetState(next);
-    setDragHeight(null);
-    dragStart.current = null;
-    void vh;
-  };
-
-  const currentHeight = dragHeight ?? heightFor(sheetState);
   const propsTabs = selected ? getPropertiesTabs(selected) : [];
 
   return (
-    <div className="bottom-sheet" style={{ height: currentHeight }}>
-      <div
-        className="bottom-sheet__handle"
-        onPointerDown={onDragStart}
-        onPointerMove={onDragMove}
-        onPointerUp={onDragEnd}
-        onPointerCancel={onDragEnd}
-      >
-        <span className="bottom-sheet__grip" />
-      </div>
-
+    <div className="bottom-sheet" style={{ bottom: keyboardInset }}>
       <div className="bottom-sheet__scroll ui-scrollbar-hidden" ref={scrollRef}>
         {selected && addOverlay ? (
           <>

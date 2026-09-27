@@ -3,7 +3,35 @@ import { findParent } from "../../model/document";
 import type { UixElement } from "../../model/types";
 import { useProject } from "../../state/ProjectContext";
 import { GridEditor } from "./GridEditor";
-import { BoxField, ColorField, SelectField, TextField, UnitField } from "./StyleField";
+import { BoxField, ColorField, SelectField, SizeSlider, TextField, UnitField } from "./StyleField";
+
+/** Sets width and height to whichever of the two is currently a real
+ * (non-keyword) size, so one tap makes the element square. */
+function makeSquareValue(styles: UixElement["styles"]): string {
+  const isReal = (v: string | undefined) => v && !/^(auto|fit-content|min-content|max-content)$/.test(v);
+  return (isReal(styles.width) && styles.width) || (isReal(styles.height) && styles.height) || "100px";
+}
+
+const BORDER_STYLE_KEYWORDS = new Set([
+  "none", "hidden", "dotted", "dashed", "solid", "double", "groove", "ridge", "inset", "outset",
+]);
+
+/** Presets like Button ship a `border` shorthand — read it into the three
+ * split fields so they don't show blank until the user touches them. Only
+ * used as a display fallback; editing a field writes the longhand property,
+ * which naturally overrides the shorthand (declared earlier in the object). */
+function splitBorderShorthand(border: string | undefined): { width?: string; style?: string; color?: string } {
+  if (!border) return {};
+  const rest: string[] = [];
+  let width: string | undefined;
+  let style: string | undefined;
+  for (const token of border.trim().split(/\s+/)) {
+    if (!style && BORDER_STYLE_KEYWORDS.has(token)) style = token;
+    else if (!width && /^[\d.]+[a-z%]*$/.test(token)) width = token;
+    else rest.push(token);
+  }
+  return { width, style, color: rest.join(" ") || undefined };
+}
 
 const TEXT_TAGS = new Set(["h1", "h2", "h3", "p", "span", "button", "a", "li"]);
 
@@ -84,20 +112,37 @@ export function PropertiesPanel({
       <div className="props-panel__body">
         {tab === "tamanho" && (
           <div className="field-grid">
-            <UnitField
-              id={id}
-              prop="width"
-              label="Width"
-              value={styles.width}
-              keywords={["auto", "fit-content", "min-content", "max-content"]}
-            />
-            <UnitField
-              id={id}
-              prop="height"
-              label="Height"
-              value={styles.height}
-              keywords={["auto", "fit-content", "min-content", "max-content"]}
-            />
+            <div className="ui-field">
+              <UnitField
+                id={id}
+                prop="width"
+                label="Width"
+                value={styles.width}
+                keywords={["auto", "fit-content", "min-content", "max-content"]}
+              />
+              <SizeSlider id={id} prop="width" value={styles.width} />
+            </div>
+            <div className="ui-field">
+              <UnitField
+                id={id}
+                prop="height"
+                label="Height"
+                value={styles.height}
+                keywords={["auto", "fit-content", "min-content", "max-content"]}
+              />
+              <SizeSlider id={id} prop="height" value={styles.height} />
+            </div>
+            <button
+              className="ui-btn"
+              style={{ gridColumn: "1 / -1" }}
+              onClick={() => {
+                const square = makeSquareValue(styles);
+                dispatch({ type: "UPDATE_STYLES", id, styles: { width: square, height: square } });
+              }}
+            >
+              <Icon name="square" size={16} />
+              Tornar quadrado (width = height)
+            </button>
             <UnitField id={id} prop="min-width" label="Min width" value={styles["min-width"]} keywords={["auto"]} />
             <UnitField id={id} prop="max-width" label="Max width" value={styles["max-width"]} keywords={["none"]} />
             <UnitField id={id} prop="min-height" label="Min height" value={styles["min-height"]} keywords={["auto"]} />
@@ -244,12 +289,39 @@ export function PropertiesPanel({
           </div>
         )}
 
-        {tab === "borda" && (
-          <div className="field-grid">
-            <TextField id={id} prop="border" label="Border" value={styles.border} placeholder="1px solid #000" />
-            <UnitField id={id} prop="border-radius" label="Border radius" value={styles["border-radius"]} />
-          </div>
-        )}
+        {tab === "borda" && (() => {
+          const legacy = splitBorderShorthand(styles.border);
+          return (
+            <div className="field-grid">
+              <UnitField
+                id={id}
+                prop="border-width"
+                label="Espessura"
+                value={styles["border-width"] ?? legacy.width}
+              />
+              <SelectField
+                id={id}
+                prop="border-style"
+                label="Estilo"
+                value={styles["border-style"] ?? legacy.style}
+                options={[
+                  { value: "none", label: "Nenhuma" },
+                  { value: "solid", label: "Sólida" },
+                  { value: "dashed", label: "Tracejada" },
+                  { value: "dotted", label: "Pontilhada" },
+                  { value: "double", label: "Dupla" },
+                ]}
+              />
+              <ColorField
+                id={id}
+                prop="border-color"
+                label="Cor da borda"
+                value={styles["border-color"] ?? legacy.color}
+              />
+              <UnitField id={id} prop="border-radius" label="Border radius" value={styles["border-radius"]} />
+            </div>
+          );
+        })()}
 
         {tab === "sombra" && (
           <div className="field-grid">

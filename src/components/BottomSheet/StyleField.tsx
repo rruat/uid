@@ -220,6 +220,45 @@ export function UnitField({
   );
 }
 
+/**
+ * A slider alternative for a numeric length field (e.g. width/height), so
+ * a dimension can be dragged instead of typed. Steps in multiples of 4 for
+ * px/rem/em (matching common spacing scales); 1 for %, since 4% steps are
+ * too coarse. Disabled while the field holds a keyword (auto, fit-content).
+ */
+export function SizeSlider({
+  id,
+  prop,
+  value,
+  max = 800,
+}: {
+  id: string;
+  prop: string;
+  value: string | undefined;
+  max?: number;
+}) {
+  const commit = useStyleCommit(id);
+  const parsed = parseUnitValue(value);
+  if (parsed.mode === "keyword") return null;
+
+  const unit = parsed.number === "" ? "px" : parsed.unit;
+  const step = unit === "%" ? 1 : 4;
+  const sliderMax = unit === "%" ? 100 : max;
+  const numeric = Math.min(sliderMax, Math.max(0, parseFloat(parsed.number || "0") || 0));
+
+  return (
+    <input
+      className="size-slider"
+      type="range"
+      min={0}
+      max={sliderMax}
+      step={step}
+      value={numeric}
+      onChange={(e) => commit({ [prop]: `${e.target.value}${unit}` })}
+    />
+  );
+}
+
 export function BoxField({
   id,
   propBase,
