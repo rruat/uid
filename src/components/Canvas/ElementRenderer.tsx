@@ -27,7 +27,9 @@ export function ElementRenderer({ element, hoveredId, setHoveredId }: Props) {
 
   // A lone free-form card can otherwise collapse to ~0×0 (just its own
   // padding) before it has real content or explicit sizing — give it a
-  // visible placeholder size/color so there's always something to select.
+  // visible minimum size so there's always something to select. Left
+  // transparent (not a placeholder fill) so it doesn't misrepresent the
+  // element's real, unstyled appearance.
   if (element.id === "root" && state.present.settings.viewport === "free") {
     const hasSize =
       element.styles.width || element.styles.height || element.styles["min-width"] || element.styles["min-height"];
@@ -35,8 +37,6 @@ export function ElementRenderer({ element, hoveredId, setHoveredId }: Props) {
       style.minWidth = "100px";
       style.minHeight = "100px";
     }
-    const hasBackground = element.styles.background || element.styles["background-color"];
-    if (!hasBackground) style.background = "var(--placeholder-bg)";
   }
 
   const commonProps = {

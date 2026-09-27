@@ -4,7 +4,8 @@ import { useProject } from "../../state/ProjectContext";
 import { Icon } from "../Icon";
 import { AddPanel } from "./AddPanel";
 import { ProjectPanel } from "./ProjectPanel";
-import { PropertiesPanel } from "./PropertiesPanel";
+import { PropertiesPanel, getPropertiesTabs } from "./PropertiesPanel";
+import type { TabKey } from "./PropertiesPanel";
 import "./bottomSheet.css";
 
 type SheetState = "collapsed" | "half" | "expanded";
@@ -18,15 +19,25 @@ export function BottomSheet() {
 
   const [sheetState, setSheetState] = useState<SheetState>("half");
   const [homeTab, setHomeTab] = useState<HomeTab>("adicionar");
+  const [propsTab, setPropsTab] = useState<TabKey>("tamanho");
   const [addOverlay, setAddOverlay] = useState(false);
   const [dragHeight, setDragHeight] = useState<number | null>(null);
   const dragStart = useRef<{ y: number; height: number } | null>(null);
   const containerHeightRef = useRef(600);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (selected) setSheetState("half");
     setAddOverlay(false);
+    setPropsTab("tamanho");
   }, [selected?.id]);
+
+  // Switching tabs shows different fields — always start them from the top,
+  // instead of leaving the scroll wherever the previous tab left it (which
+  // could make the new tab's fields look cut off).
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0 });
+  }, [propsTab, homeTab]);
 
   const heightFor = (s: SheetState) => {
     const vh = containerHeightRef.current;
@@ -67,6 +78,7 @@ export function BottomSheet() {
   };
 
   const currentHeight = dragHeight ?? heightFor(sheetState);
+  const propsTabs = selected ? getPropertiesTabs(selected) : [];
 
   return (
     <div className="bottom-sheet" style={{ height: currentHeight }}>
@@ -78,25 +90,9 @@ export function BottomSheet() {
         onPointerCancel={onDragEnd}
       >
         <span className="bottom-sheet__grip" />
-        {!selected && (
-          <div className="home-tabs">
-            <button
-              className={`tab-pill ${homeTab === "adicionar" ? "is-active" : ""}`}
-              onClick={() => setHomeTab("adicionar")}
-            >
-              Adicionar
-            </button>
-            <button
-              className={`tab-pill ${homeTab === "projeto" ? "is-active" : ""}`}
-              onClick={() => setHomeTab("projeto")}
-            >
-              Projeto
-            </button>
-          </div>
-        )}
       </div>
 
-      <div className="bottom-sheet__content ui-scrollbar-hidden">
+      <div className="bottom-sheet__scroll ui-scrollbar-hidden" ref={scrollRef}>
         {selected && addOverlay ? (
           <>
             <div className="add-overlay-header">
@@ -108,13 +104,46 @@ export function BottomSheet() {
             <AddPanel />
           </>
         ) : selected ? (
-          <PropertiesPanel element={selected} onOpenAdd={() => setAddOverlay(true)} />
+          <PropertiesPanel element={selected} tab={propsTab} onOpenAdd={() => setAddOverlay(true)} />
         ) : homeTab === "adicionar" ? (
           <AddPanel />
         ) : (
           <ProjectPanel />
         )}
       </div>
+
+      {/* Fixed, non-scrolling: these are the tabs that decide what the
+          scroll area above shows, so they stay reachable and legible
+          instead of scrolling away (and sometimes clipping) with the
+          content. */}
+      {!addOverlay && (
+        <div className="bottom-sheet__chips ui-scrollbar-hidden">
+          {selected
+            ? propsTabs.map((t) => (
+                <button
+                  key={t.key}
+                  className={`tab-pill ${propsTab === t.key ? "is-active" : ""}`}
+                  onClick={() => setPropsTab(t.key)}
+                >
+                  {t.label}
+                </button>
+              ))
+            : (
+                [
+                  { key: "adicionar" as HomeTab, label: "Adicionar" },
+                  { key: "projeto" as HomeTab, label: "Projeto" },
+                ]
+              ).map((t) => (
+                <button
+                  key={t.key}
+                  className={`tab-pill ${homeTab === t.key ? "is-active" : ""}`}
+                  onClick={() => setHomeTab(t.key)}
+                >
+                  {t.label}
+                </button>
+              ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Icon } from "../Icon";
 import { findParent } from "../../model/document";
 import type { UixElement } from "../../model/types";
@@ -8,20 +7,22 @@ import { BoxField, ColorField, SelectField, TextField, UnitField } from "./Style
 
 const TEXT_TAGS = new Set(["h1", "h2", "h3", "p", "span", "button", "a", "li"]);
 
-type TabKey = "tamanho" | "espacamento" | "layout" | "tipografia" | "cores" | "borda" | "fundo" | "sombra" | "posicao";
+export type TabKey =
+  | "tamanho"
+  | "espacamento"
+  | "layout"
+  | "tipografia"
+  | "cores"
+  | "borda"
+  | "fundo"
+  | "sombra"
+  | "posicao";
 
-export function PropertiesPanel({
-  element,
-  onOpenAdd,
-}: {
-  element: UixElement;
-  onOpenAdd: () => void;
-}) {
-  const { state, dispatch } = useProject();
+/** The tab chips are rendered fixed at the bottom of the sheet (by BottomSheet),
+ * so it needs this same list to know what to show — kept in one place here. */
+export function getPropertiesTabs(element: UixElement): { key: TabKey; label: string }[] {
   const isTextual = TEXT_TAGS.has(element.tag);
-  const parent = findParent(state.present.root, element.id);
-  const parentIsGrid = parent?.styles.display === "grid";
-  const tabs: { key: TabKey; label: string }[] = [
+  return [
     { key: "tamanho", label: "Tamanho" },
     { key: "espacamento", label: "Espaçamento" },
     { key: "layout", label: "Layout" },
@@ -32,7 +33,20 @@ export function PropertiesPanel({
     { key: "sombra", label: "Sombra" },
     { key: "posicao", label: "Posição" },
   ];
-  const [tab, setTab] = useState<TabKey>("tamanho");
+}
+
+export function PropertiesPanel({
+  element,
+  tab,
+  onOpenAdd,
+}: {
+  element: UixElement;
+  tab: TabKey;
+  onOpenAdd: () => void;
+}) {
+  const { state, dispatch } = useProject();
+  const parent = findParent(state.present.root, element.id);
+  const parentIsGrid = parent?.styles.display === "grid";
   const styles = element.styles;
   const id = element.id;
 
@@ -65,18 +79,6 @@ export function PropertiesPanel({
             <Icon name="x" size={16} />
           </button>
         </div>
-      </div>
-
-      <div className="tab-strip ui-scrollbar-hidden">
-        {tabs.map((t) => (
-          <button
-            key={t.key}
-            className={`tab-pill ${tab === t.key ? "is-active" : ""}`}
-            onClick={() => setTab(t.key)}
-          >
-            {t.label}
-          </button>
-        ))}
       </div>
 
       <div className="props-panel__body">
