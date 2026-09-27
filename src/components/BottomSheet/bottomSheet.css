@@ -234,6 +234,42 @@
   gap: var(--space-2);
 }
 
+.unit-field {
+  display: flex;
+  gap: 6px;
+}
+
+.unit-field .ui-input {
+  min-width: 0;
+  flex: 1;
+}
+
+.unit-field .ui-input:disabled {
+  color: var(--text-muted);
+  background: var(--surface-alt);
+}
+
+.unit-select {
+  flex-shrink: 0;
+  width: 52px;
+  height: 34px;
+  padding: 0;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background-color: var(--surface);
+  background-image: none;
+  color: var(--text-muted);
+  font-size: 12px;
+  text-align: center;
+  text-align-last: center;
+}
+
+.unit-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  color: var(--text);
+}
+
 .color-swatch {
   width: 34px;
   height: 34px;

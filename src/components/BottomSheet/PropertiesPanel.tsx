@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Icon } from "../Icon";
 import type { UixElement } from "../../model/types";
 import { useProject } from "../../state/ProjectContext";
-import { BoxField, ColorField, SelectField, TextField } from "./StyleField";
+import { BoxField, ColorField, SelectField, TextField, UnitField } from "./StyleField";
 
 const TEXT_TAGS = new Set(["h1", "h2", "h3", "p", "span", "button", "a", "li"]);
 
@@ -78,12 +78,24 @@ export function PropertiesPanel({
       <div className="props-panel__body">
         {tab === "tamanho" && (
           <div className="field-grid">
-            <TextField id={id} prop="width" label="Width" value={styles.width} placeholder="100%" />
-            <TextField id={id} prop="height" label="Height" value={styles.height} placeholder="auto" />
-            <TextField id={id} prop="min-width" label="Min width" value={styles["min-width"]} />
-            <TextField id={id} prop="max-width" label="Max width" value={styles["max-width"]} />
-            <TextField id={id} prop="min-height" label="Min height" value={styles["min-height"]} />
-            <TextField id={id} prop="max-height" label="Max height" value={styles["max-height"]} />
+            <UnitField
+              id={id}
+              prop="width"
+              label="Width"
+              value={styles.width}
+              keywords={["auto", "fit-content", "min-content", "max-content"]}
+            />
+            <UnitField
+              id={id}
+              prop="height"
+              label="Height"
+              value={styles.height}
+              keywords={["auto", "fit-content", "min-content", "max-content"]}
+            />
+            <UnitField id={id} prop="min-width" label="Min width" value={styles["min-width"]} keywords={["auto"]} />
+            <UnitField id={id} prop="max-width" label="Max width" value={styles["max-width"]} keywords={["none"]} />
+            <UnitField id={id} prop="min-height" label="Min height" value={styles["min-height"]} keywords={["auto"]} />
+            <UnitField id={id} prop="max-height" label="Max height" value={styles["max-height"]} keywords={["none"]} />
           </div>
         )}
 
@@ -156,13 +168,13 @@ export function PropertiesPanel({
                 { value: "flex-end", label: "Fim" },
               ]}
             />
-            <TextField id={id} prop="gap" label="Gap" value={styles.gap} placeholder="8px" />
+            <UnitField id={id} prop="gap" label="Gap" value={styles.gap} />
           </div>
         )}
 
         {tab === "tipografia" && (
           <div className="field-grid">
-            <TextField id={id} prop="font-size" label="Font size" value={styles["font-size"]} placeholder="16px" />
+            <UnitField id={id} prop="font-size" label="Font size" value={styles["font-size"]} />
             <SelectField
               id={id}
               prop="font-weight"
@@ -176,7 +188,7 @@ export function PropertiesPanel({
               ]}
             />
             <TextField id={id} prop="line-height" label="Line height" value={styles["line-height"]} placeholder="1.4" />
-            <TextField id={id} prop="letter-spacing" label="Letter spacing" value={styles["letter-spacing"]} />
+            <UnitField id={id} prop="letter-spacing" label="Letter spacing" value={styles["letter-spacing"]} keywords={["normal"]} />
             <SelectField
               id={id}
               prop="text-align"
@@ -208,7 +220,7 @@ export function PropertiesPanel({
         {tab === "borda" && (
           <div className="field-grid">
             <TextField id={id} prop="border" label="Border" value={styles.border} placeholder="1px solid #000" />
-            <TextField id={id} prop="border-radius" label="Border radius" value={styles["border-radius"]} placeholder="8px" />
+            <UnitField id={id} prop="border-radius" label="Border radius" value={styles["border-radius"]} />
           </div>
         )}
 
@@ -239,10 +251,10 @@ export function PropertiesPanel({
                 { value: "sticky", label: "Sticky" },
               ]}
             />
-            <TextField id={id} prop="top" label="Top" value={styles.top} />
-            <TextField id={id} prop="right" label="Right" value={styles.right} />
-            <TextField id={id} prop="bottom" label="Bottom" value={styles.bottom} />
-            <TextField id={id} prop="left" label="Left" value={styles.left} />
+            <UnitField id={id} prop="top" label="Top" value={styles.top} keywords={["auto"]} />
+            <UnitField id={id} prop="right" label="Right" value={styles.right} keywords={["auto"]} />
+            <UnitField id={id} prop="bottom" label="Bottom" value={styles.bottom} keywords={["auto"]} />
+            <UnitField id={id} prop="left" label="Left" value={styles.left} keywords={["auto"]} />
             <TextField id={id} prop="z-index" label="Z-index" value={styles["z-index"]} />
           </div>
         )}

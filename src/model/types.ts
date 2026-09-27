@@ -48,9 +48,11 @@ export interface UixAsset {
   dataUrl: string;
 }
 
+export type Viewport = "mobile" | "tablet" | "desktop" | "free";
+
 export interface UixSettings {
   canvasBackground?: string;
-  viewport: "mobile" | "tablet" | "desktop";
+  viewport: Viewport;
 }
 
 export interface UixDocument {
@@ -65,8 +67,11 @@ export interface UixDocument {
   root: UixElement;
 }
 
-export const DEFAULT_VIEWPORT_WIDTHS: Record<UixSettings["viewport"], number> = {
+// `free` has no fixed width: the artboard hugs whatever the user builds
+// (e.g. a single card), instead of forcing a full device-page frame.
+export const DEFAULT_VIEWPORT_WIDTHS: Record<Viewport, number | null> = {
   mobile: 390,
   tablet: 768,
   desktop: 1280,
+  free: null,
 };

@@ -7,7 +7,8 @@ import "./preview.css";
 export function PreviewFrame() {
   const { state } = useProject();
   const doc = useMemo(() => generatePreviewDocument(state.present), [state.present]);
-  const width = DEFAULT_VIEWPORT_WIDTHS[state.present.settings.viewport];
+  // "free" has no fixed width in the model — use a card-sized default just for previewing.
+  const width = DEFAULT_VIEWPORT_WIDTHS[state.present.settings.viewport] ?? 420;
 
   return (
     <div className="preview-wrap">

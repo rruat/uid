@@ -116,7 +116,10 @@ export function Canvas() {
           transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
         }}
       >
-        <div className="uid-artboard" style={{ width: artboardWidth }}>
+        <div
+          className={`uid-artboard ${artboardWidth === null ? "uid-artboard--free" : ""}`}
+          style={artboardWidth === null ? undefined : { width: artboardWidth }}
+        >
           <ElementRenderer
             element={state.present.root}
             hoveredId={hoveredId}

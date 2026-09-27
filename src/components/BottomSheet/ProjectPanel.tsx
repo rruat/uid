@@ -13,12 +13,13 @@ import {
   type ProjectSummary,
 } from "../../model/storage";
 import { useProject } from "../../state/ProjectContext";
-import type { UixSettings } from "../../model/types";
+import type { Viewport } from "../../model/types";
 
-const VIEWPORTS: { key: UixSettings["viewport"]; icon: "smartphone" | "tablet" | "monitor"; label: string }[] = [
+const VIEWPORTS: { key: Viewport; icon: "smartphone" | "tablet" | "monitor" | "squareDashed"; label: string }[] = [
   { key: "mobile", icon: "smartphone", label: "Mobile" },
   { key: "tablet", icon: "tablet", label: "Tablet" },
   { key: "desktop", icon: "monitor", label: "Desktop" },
+  { key: "free", icon: "squareDashed", label: "Livre" },
 ];
 
 function formatRelativeDate(iso: string): string {
@@ -77,7 +78,7 @@ export function ProjectPanel() {
 
       <div className="ui-field">
         <span className="ui-label">Viewport de visualização</span>
-        <div className="ui-row">
+        <div className="ui-row" style={{ flexWrap: "wrap" }}>
           {VIEWPORTS.map((v) => (
             <button
               key={v.key}
