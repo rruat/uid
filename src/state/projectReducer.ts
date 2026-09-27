@@ -8,6 +8,7 @@ import {
   updateElement,
 } from "../model/document";
 import { createId } from "../model/id";
+import { nextAutoAreaName } from "../model/gridUtils";
 import type { CSSProperties, UixDocument, UixSettings } from "../model/types";
 
 /** Backfills an id for documents saved before the .uix schema added one. */
@@ -68,6 +69,19 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
       const preset = ELEMENT_PRESETS.find((p) => p.key === action.presetKey);
       if (!preset) return state;
       const el = createElementFromPreset(preset);
+
+      // A child dropped straight into a CSS Grid container is invisible
+      // until it's placed, so give it an automatic, unique area name right
+      // away — it can be reassigned by typing the same name into the
+      // parent's grid-area editor, or from the child's own Layout tab.
+      const parent = findElement(state.present.root, action.parentId);
+      if (parent?.styles.display === "grid") {
+        const siblingNames = parent.children
+          .map((c) => c.styles["grid-area"])
+          .filter((v): v is string => Boolean(v));
+        el.styles["grid-area"] = nextAutoAreaName(siblingNames);
+      }
+
       const nextDoc = insertChild(state.present.root, action.parentId, el, action.index);
       return {
         ...withHistory(state, { ...state.present, root: nextDoc }),

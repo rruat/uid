@@ -17,13 +17,27 @@ export function ElementRenderer({ element, hoveredId, setHoveredId }: Props) {
 
   const style = stylesToReactStyle(element.styles);
   if (isSelected) {
-    style.outline = "2px solid var(--accent)";
-    style.outlineOffset = "-1px";
+    style.outline = "2px dashed var(--selection)";
+    style.outlineOffset = "2px";
   } else if (isHovered) {
     style.outline = "1.5px dashed var(--border-strong)";
-    style.outlineOffset = "-1px";
+    style.outlineOffset = "2px";
   }
   if (element.hidden) style.opacity = 0.35;
+
+  // A lone free-form card can otherwise collapse to ~0×0 (just its own
+  // padding) before it has real content or explicit sizing — give it a
+  // visible placeholder size/color so there's always something to select.
+  if (element.id === "root" && state.present.settings.viewport === "free") {
+    const hasSize =
+      element.styles.width || element.styles.height || element.styles["min-width"] || element.styles["min-height"];
+    if (!hasSize) {
+      style.minWidth = "100px";
+      style.minHeight = "100px";
+    }
+    const hasBackground = element.styles.background || element.styles["background-color"];
+    if (!hasBackground) style.background = "var(--placeholder-bg)";
+  }
 
   const commonProps = {
     key: element.id,

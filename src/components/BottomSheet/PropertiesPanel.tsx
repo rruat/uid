@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Icon } from "../Icon";
+import { findParent } from "../../model/document";
 import type { UixElement } from "../../model/types";
 import { useProject } from "../../state/ProjectContext";
+import { GridEditor } from "./GridEditor";
 import { BoxField, ColorField, SelectField, TextField, UnitField } from "./StyleField";
 
 const TEXT_TAGS = new Set(["h1", "h2", "h3", "p", "span", "button", "a", "li"]);
@@ -15,8 +17,10 @@ export function PropertiesPanel({
   element: UixElement;
   onOpenAdd: () => void;
 }) {
-  const { dispatch } = useProject();
+  const { state, dispatch } = useProject();
   const isTextual = TEXT_TAGS.has(element.tag);
+  const parent = findParent(state.present.root, element.id);
+  const parentIsGrid = parent?.styles.display === "grid";
   const tabs: { key: TabKey; label: string }[] = [
     { key: "tamanho", label: "Tamanho" },
     { key: "espacamento", label: "Espaçamento" },
@@ -107,68 +111,89 @@ export function PropertiesPanel({
         )}
 
         {tab === "layout" && (
-          <div className="field-grid">
-            <SelectField
-              id={id}
-              prop="display"
-              label="Display"
-              value={styles.display}
-              options={[
-                { value: "block", label: "Block" },
-                { value: "inline-block", label: "Inline block" },
-                { value: "flex", label: "Flex" },
-                { value: "grid", label: "Grid" },
-                { value: "none", label: "None" },
-              ]}
-            />
-            <SelectField
-              id={id}
-              prop="flex-direction"
-              label="Direção"
-              value={styles["flex-direction"]}
-              options={[
-                { value: "row", label: "Linha" },
-                { value: "column", label: "Coluna" },
-                { value: "row-reverse", label: "Linha reversa" },
-                { value: "column-reverse", label: "Coluna reversa" },
-              ]}
-            />
-            <SelectField
-              id={id}
-              prop="flex-wrap"
-              label="Quebra"
-              value={styles["flex-wrap"]}
-              options={[
-                { value: "nowrap", label: "Sem quebra" },
-                { value: "wrap", label: "Quebrar" },
-              ]}
-            />
-            <SelectField
-              id={id}
-              prop="justify-content"
-              label="Justify"
-              value={styles["justify-content"]}
-              options={[
-                { value: "flex-start", label: "Início" },
-                { value: "center", label: "Centro" },
-                { value: "flex-end", label: "Fim" },
-                { value: "space-between", label: "Entre" },
-                { value: "space-around", label: "Ao redor" },
-              ]}
-            />
-            <SelectField
-              id={id}
-              prop="align-items"
-              label="Align"
-              value={styles["align-items"]}
-              options={[
-                { value: "stretch", label: "Esticar" },
-                { value: "flex-start", label: "Início" },
-                { value: "center", label: "Centro" },
-                { value: "flex-end", label: "Fim" },
-              ]}
-            />
-            <UnitField id={id} prop="gap" label="Gap" value={styles.gap} />
+          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
+            {parentIsGrid && (
+              <div className="field-grid">
+                <TextField
+                  id={id}
+                  prop="grid-area"
+                  label="Área da grade (grid-area)"
+                  value={styles["grid-area"]}
+                  placeholder="item-1"
+                />
+              </div>
+            )}
+
+            <div className="field-grid">
+              <SelectField
+                id={id}
+                prop="display"
+                label="Display"
+                value={styles.display}
+                options={[
+                  { value: "block", label: "Block" },
+                  { value: "inline-block", label: "Inline block" },
+                  { value: "flex", label: "Flex" },
+                  { value: "grid", label: "Grid" },
+                  { value: "none", label: "None" },
+                ]}
+              />
+            </div>
+
+            {styles.display === "flex" && (
+              <div className="field-grid">
+                <SelectField
+                  id={id}
+                  prop="flex-direction"
+                  label="Direção"
+                  value={styles["flex-direction"]}
+                  options={[
+                    { value: "row", label: "Linha" },
+                    { value: "column", label: "Coluna" },
+                    { value: "row-reverse", label: "Linha reversa" },
+                    { value: "column-reverse", label: "Coluna reversa" },
+                  ]}
+                />
+                <SelectField
+                  id={id}
+                  prop="flex-wrap"
+                  label="Quebra"
+                  value={styles["flex-wrap"]}
+                  options={[
+                    { value: "nowrap", label: "Sem quebra" },
+                    { value: "wrap", label: "Quebrar" },
+                  ]}
+                />
+                <SelectField
+                  id={id}
+                  prop="justify-content"
+                  label="Justify"
+                  value={styles["justify-content"]}
+                  options={[
+                    { value: "flex-start", label: "Início" },
+                    { value: "center", label: "Centro" },
+                    { value: "flex-end", label: "Fim" },
+                    { value: "space-between", label: "Entre" },
+                    { value: "space-around", label: "Ao redor" },
+                  ]}
+                />
+                <SelectField
+                  id={id}
+                  prop="align-items"
+                  label="Align"
+                  value={styles["align-items"]}
+                  options={[
+                    { value: "stretch", label: "Esticar" },
+                    { value: "flex-start", label: "Início" },
+                    { value: "center", label: "Centro" },
+                    { value: "flex-end", label: "Fim" },
+                  ]}
+                />
+                <UnitField id={id} prop="gap" label="Gap" value={styles.gap} />
+              </div>
+            )}
+
+            {styles.display === "grid" && <GridEditor id={id} styles={styles} />}
           </div>
         )}
 

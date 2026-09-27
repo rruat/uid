@@ -222,9 +222,13 @@
   padding-top: var(--space-4);
 }
 
+/* "Smart" grid: a value + unit field needs real width to stay legible, so
+   this only ever packs a second field onto the same row when there's
+   genuinely enough space (e.g. a wider sheet/tablet) — on a phone-width
+   sheet it falls back to one field per row instead of always forcing two. */
 .field-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: var(--space-3);
 }
 
@@ -268,6 +272,61 @@
   outline: none;
   border-color: var(--accent);
   color: var(--text);
+}
+
+.grid-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.stepper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stepper__control {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.stepper__value {
+  min-width: 20px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.grid-area-editor {
+  display: grid;
+  gap: 4px;
+}
+
+.grid-area-cell {
+  height: 40px;
+  min-width: 0;
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-alt);
+  text-align: center;
+  font-size: 11px;
+  color: var(--text);
+  padding: 0 2px;
+}
+
+.grid-area-cell:focus {
+  outline: none;
+  border-color: var(--accent);
+  border-style: solid;
+  background: var(--surface);
+}
+
+.grid-editor__hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
 }
 
 .color-swatch {

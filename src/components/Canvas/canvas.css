@@ -22,11 +22,16 @@
 }
 
 /* Free-form: hugs the content (e.g. a single card) instead of forcing a
-   full device-page frame — no fixed width, no forced viewport height. */
+   full device-page frame — no fixed width/height, and no artboard chrome
+   (background/border) either, so the element sits raw on the canvas. */
 .uid-artboard--free {
   display: inline-block;
   width: max-content;
   min-height: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  overflow: visible;
 }
 
 .uid-canvas__zoom {
