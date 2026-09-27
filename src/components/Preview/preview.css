@@ -1,0 +1,17 @@
+.preview-wrap {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  overflow: auto;
+  background: var(--surface-alt);
+  padding: var(--space-5) 0;
+}
+
+.preview-frame {
+  height: 100%;
+  min-height: 640px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: #fff;
+}

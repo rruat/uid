@@ -1,0 +1,37 @@
+.uid-canvas {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  background: var(--surface-alt);
+  background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
+  background-size: 20px 20px;
+  touch-action: none;
+}
+
+.uid-canvas__surface {
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.uid-artboard {
+  min-height: 100vh;
+  background: var(--bg);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.uid-canvas__zoom {
+  position: absolute;
+  right: var(--space-3);
+  bottom: var(--space-3);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  font-size: 12px;
+  color: var(--text-muted);
+}

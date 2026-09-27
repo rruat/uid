@@ -1,0 +1,267 @@
+import { useState } from "react";
+import { Icon } from "../Icon";
+import type { UixElement } from "../../model/types";
+import { useProject } from "../../state/ProjectContext";
+import { BoxField, ColorField, SelectField, TextField } from "./StyleField";
+
+const TEXT_TAGS = new Set(["h1", "h2", "h3", "p", "span", "button", "a", "li"]);
+
+type TabKey = "tamanho" | "espacamento" | "layout" | "tipografia" | "cores" | "borda" | "fundo" | "sombra" | "posicao";
+
+export function PropertiesPanel({
+  element,
+  onOpenAdd,
+}: {
+  element: UixElement;
+  onOpenAdd: () => void;
+}) {
+  const { dispatch } = useProject();
+  const isTextual = TEXT_TAGS.has(element.tag);
+  const tabs: { key: TabKey; label: string }[] = [
+    { key: "tamanho", label: "Tamanho" },
+    { key: "espacamento", label: "Espaçamento" },
+    { key: "layout", label: "Layout" },
+    ...(isTextual ? [{ key: "tipografia" as TabKey, label: "Tipografia" }] : []),
+    { key: "cores", label: "Cores" },
+    { key: "fundo", label: "Fundo" },
+    { key: "borda", label: "Borda" },
+    { key: "sombra", label: "Sombra" },
+    { key: "posicao", label: "Posição" },
+  ];
+  const [tab, setTab] = useState<TabKey>("tamanho");
+  const styles = element.styles;
+  const id = element.id;
+
+  return (
+    <div className="props-panel">
+      <div className="props-panel__header">
+        <div className="ui-row" style={{ gap: 6 }}>
+          <span className="tag-badge">{element.tag}</span>
+          <input
+            className="element-name-input"
+            value={element.name}
+            onChange={(e) => dispatch({ type: "UPDATE_NAME", id, name: e.target.value })}
+          />
+        </div>
+        <div className="ui-row">
+          <button className="ui-btn is-icon" title="Adicionar dentro" onClick={onOpenAdd}>
+            <Icon name="plus" size={16} />
+          </button>
+          <button className="ui-btn is-icon" title="Duplicar" onClick={() => dispatch({ type: "DUPLICATE_ELEMENT", id })}>
+            <Icon name="copy" size={16} />
+          </button>
+          <button
+            className="ui-btn is-icon"
+            title="Excluir"
+            onClick={() => dispatch({ type: "REMOVE_ELEMENT", id })}
+          >
+            <Icon name="trash" size={16} />
+          </button>
+          <button className="ui-btn is-icon" title="Fechar" onClick={() => dispatch({ type: "SELECT", id: null })}>
+            <Icon name="x" size={16} />
+          </button>
+        </div>
+      </div>
+
+      <div className="tab-strip ui-scrollbar-hidden">
+        {tabs.map((t) => (
+          <button
+            key={t.key}
+            className={`tab-pill ${tab === t.key ? "is-active" : ""}`}
+            onClick={() => setTab(t.key)}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="props-panel__body">
+        {tab === "tamanho" && (
+          <div className="field-grid">
+            <TextField id={id} prop="width" label="Width" value={styles.width} placeholder="100%" />
+            <TextField id={id} prop="height" label="Height" value={styles.height} placeholder="auto" />
+            <TextField id={id} prop="min-width" label="Min width" value={styles["min-width"]} />
+            <TextField id={id} prop="max-width" label="Max width" value={styles["max-width"]} />
+            <TextField id={id} prop="min-height" label="Min height" value={styles["min-height"]} />
+            <TextField id={id} prop="max-height" label="Max height" value={styles["max-height"]} />
+          </div>
+        )}
+
+        {tab === "espacamento" && (
+          <div className="field-grid">
+            <BoxField id={id} propBase="padding" label="Padding" styles={styles} />
+            <BoxField id={id} propBase="margin" label="Margin" styles={styles} />
+          </div>
+        )}
+
+        {tab === "layout" && (
+          <div className="field-grid">
+            <SelectField
+              id={id}
+              prop="display"
+              label="Display"
+              value={styles.display}
+              options={[
+                { value: "block", label: "Block" },
+                { value: "inline-block", label: "Inline block" },
+                { value: "flex", label: "Flex" },
+                { value: "grid", label: "Grid" },
+                { value: "none", label: "None" },
+              ]}
+            />
+            <SelectField
+              id={id}
+              prop="flex-direction"
+              label="Direção"
+              value={styles["flex-direction"]}
+              options={[
+                { value: "row", label: "Linha" },
+                { value: "column", label: "Coluna" },
+                { value: "row-reverse", label: "Linha reversa" },
+                { value: "column-reverse", label: "Coluna reversa" },
+              ]}
+            />
+            <SelectField
+              id={id}
+              prop="flex-wrap"
+              label="Quebra"
+              value={styles["flex-wrap"]}
+              options={[
+                { value: "nowrap", label: "Sem quebra" },
+                { value: "wrap", label: "Quebrar" },
+              ]}
+            />
+            <SelectField
+              id={id}
+              prop="justify-content"
+              label="Justify"
+              value={styles["justify-content"]}
+              options={[
+                { value: "flex-start", label: "Início" },
+                { value: "center", label: "Centro" },
+                { value: "flex-end", label: "Fim" },
+                { value: "space-between", label: "Entre" },
+                { value: "space-around", label: "Ao redor" },
+              ]}
+            />
+            <SelectField
+              id={id}
+              prop="align-items"
+              label="Align"
+              value={styles["align-items"]}
+              options={[
+                { value: "stretch", label: "Esticar" },
+                { value: "flex-start", label: "Início" },
+                { value: "center", label: "Centro" },
+                { value: "flex-end", label: "Fim" },
+              ]}
+            />
+            <TextField id={id} prop="gap" label="Gap" value={styles.gap} placeholder="8px" />
+          </div>
+        )}
+
+        {tab === "tipografia" && (
+          <div className="field-grid">
+            <TextField id={id} prop="font-size" label="Font size" value={styles["font-size"]} placeholder="16px" />
+            <SelectField
+              id={id}
+              prop="font-weight"
+              label="Peso"
+              value={styles["font-weight"]}
+              options={[
+                { value: "400", label: "Normal" },
+                { value: "500", label: "Medium" },
+                { value: "600", label: "Semibold" },
+                { value: "700", label: "Bold" },
+              ]}
+            />
+            <TextField id={id} prop="line-height" label="Line height" value={styles["line-height"]} placeholder="1.4" />
+            <TextField id={id} prop="letter-spacing" label="Letter spacing" value={styles["letter-spacing"]} />
+            <SelectField
+              id={id}
+              prop="text-align"
+              label="Alinhamento"
+              value={styles["text-align"]}
+              options={[
+                { value: "left", label: "Esquerda" },
+                { value: "center", label: "Centro" },
+                { value: "right", label: "Direita" },
+                { value: "justify", label: "Justificado" },
+              ]}
+            />
+            <ContentEditor id={id} value={element.content} />
+          </div>
+        )}
+
+        {tab === "cores" && (
+          <div className="field-grid">
+            <ColorField id={id} prop="color" label="Cor do texto" value={styles.color} />
+          </div>
+        )}
+
+        {tab === "fundo" && (
+          <div className="field-grid">
+            <ColorField id={id} prop="background" label="Background" value={styles.background} />
+          </div>
+        )}
+
+        {tab === "borda" && (
+          <div className="field-grid">
+            <TextField id={id} prop="border" label="Border" value={styles.border} placeholder="1px solid #000" />
+            <TextField id={id} prop="border-radius" label="Border radius" value={styles["border-radius"]} placeholder="8px" />
+          </div>
+        )}
+
+        {tab === "sombra" && (
+          <div className="field-grid">
+            <TextField
+              id={id}
+              prop="box-shadow"
+              label="Box shadow"
+              value={styles["box-shadow"]}
+              placeholder="0px 4px 20px rgba(0,0,0,.1)"
+            />
+          </div>
+        )}
+
+        {tab === "posicao" && (
+          <div className="field-grid">
+            <SelectField
+              id={id}
+              prop="position"
+              label="Position"
+              value={styles.position}
+              options={[
+                { value: "static", label: "Static" },
+                { value: "relative", label: "Relative" },
+                { value: "absolute", label: "Absolute" },
+                { value: "fixed", label: "Fixed" },
+                { value: "sticky", label: "Sticky" },
+              ]}
+            />
+            <TextField id={id} prop="top" label="Top" value={styles.top} />
+            <TextField id={id} prop="right" label="Right" value={styles.right} />
+            <TextField id={id} prop="bottom" label="Bottom" value={styles.bottom} />
+            <TextField id={id} prop="left" label="Left" value={styles.left} />
+            <TextField id={id} prop="z-index" label="Z-index" value={styles["z-index"]} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ContentEditor({ id, value }: { id: string; value: string | undefined }) {
+  const { dispatch } = useProject();
+  return (
+    <label className="ui-field" style={{ gridColumn: "1 / -1" }}>
+      <span className="ui-label">Texto</span>
+      <textarea
+        className="ui-input"
+        style={{ height: 64, resize: "vertical", paddingTop: 8 }}
+        defaultValue={value}
+        onBlur={(e) => dispatch({ type: "UPDATE_CONTENT", id, content: e.target.value })}
+      />
+    </label>
+  );
+}
