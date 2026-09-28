@@ -502,7 +502,7 @@ export function SelectionOverlay({ artboardRef, scale }: SelectionOverlayProps) 
         boxElRef.current.style.transform = `translate(${targetX}px, ${targetY}px)`;
       }
 
-      if (d.hasMoved && isAbsolute) {
+      if (d.hasMoved && artboardRef.current) {
         const domEl = artboardRef.current.querySelector(`[data-el-id="${selectedId}"]`) as HTMLElement | null;
         if (domEl) {
           const moveX = Math.round(targetX - box.x);
@@ -602,7 +602,14 @@ export function SelectionOverlay({ artboardRef, scale }: SelectionOverlayProps) 
       const isAbsolute = selectedModel?.styles.position === "absolute";
 
       if (d && d.hasMoved) {
-        if (isAbsolute && artboardRef.current) {
+        if (dropIndicator && !isAbsolute) {
+          dispatch({
+            type: "MOVE_ELEMENT",
+            id: selectedId,
+            newParentId: dropIndicator.parentId,
+            index: dropIndicator.index,
+          });
+        } else if (artboardRef.current) {
           const artRect = artboardRef.current.getBoundingClientRect();
           const parentModel = findParent(state.present.root, selectedId);
           let parentLeft = 0;
@@ -621,49 +628,17 @@ export function SelectionOverlay({ artboardRef, scale }: SelectionOverlayProps) 
           const finalRelY = Math.round(d.curY - parentTop);
 
           const styles: Record<string, string> = {
+            position: "absolute",
             left: `${finalRelX}px`,
             top: `${finalRelY}px`,
+            right: "",
+            bottom: "",
           };
-          if (selectedModel?.styles.right) styles.right = "";
-          if (selectedModel?.styles.bottom) styles.bottom = "";
 
           dispatch({
             type: "UPDATE_STYLES",
             id: selectedId,
             styles,
-          });
-        } else if (dropIndicator) {
-          dispatch({
-            type: "MOVE_ELEMENT",
-            id: selectedId,
-            newParentId: dropIndicator.parentId,
-            index: dropIndicator.index,
-          });
-        } else if (artboardRef.current) {
-          // Dropped in open space without drop indicator: auto-convert to absolute mode
-          const artRect = artboardRef.current.getBoundingClientRect();
-          const parentModel = findParent(state.present.root, selectedId);
-          let parentLeft = 0;
-          let parentTop = 0;
-
-          if (parentModel) {
-            const pDom = artboardRef.current.querySelector(`[data-el-id="${parentModel.id}"]`) as HTMLElement | null;
-            if (pDom) {
-              const pRect = pDom.getBoundingClientRect();
-              parentLeft = (pRect.left - artRect.left) / scale;
-              parentTop = (pRect.top - artRect.top) / scale;
-            }
-          }
-
-          const finalRelX = Math.round(d.curX - parentLeft);
-          const finalRelY = Math.round(d.curY - parentTop);
-
-          dispatch({
-            type: "SET_POSITION_MODE",
-            id: selectedId,
-            positionMode: "absolute",
-            left: `${finalRelX}px`,
-            top: `${finalRelY}px`,
           });
         }
       } else {
@@ -694,40 +669,6 @@ export function SelectionOverlay({ artboardRef, scale }: SelectionOverlayProps) 
       window.removeEventListener("pointercancel", onPointerUp);
     };
   }, [isDragging, selectedId, scale, box, state.present, dropIndicator, artboardRef, updateBox, dispatch]);
-
-  const handleTogglePositionMode = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!selectedId || !box) return;
-    const selectedModel = findElement(state.present.root, selectedId);
-    if (!selectedModel) return;
-    const isCurrentlyAbsolute = selectedModel.styles.position === "absolute";
-    const nextMode = isCurrentlyAbsolute ? "relative" : "absolute";
-
-    const parentModel = findParent(state.present.root, selectedId);
-    let parentLeft = 0;
-    let parentTop = 0;
-    if (parentModel && artboardRef.current) {
-      const artRect = artboardRef.current.getBoundingClientRect();
-      const pDom = artboardRef.current.querySelector(`[data-el-id="${parentModel.id}"]`) as HTMLElement | null;
-      if (pDom) {
-        const pRect = pDom.getBoundingClientRect();
-        parentLeft = (pRect.left - artRect.left) / scale;
-        parentTop = (pRect.top - artRect.top) / scale;
-      }
-    }
-
-    const relX = Math.round(box.x - parentLeft);
-    const relY = Math.round(box.y - parentTop);
-
-    dispatch({
-      type: "SET_POSITION_MODE",
-      id: selectedId,
-      positionMode: nextMode,
-      left: `${relX}px`,
-      top: `${relY}px`,
-    });
-    setTimeout(updateBox, 30);
-  };
 
   if (!box || !selectedId || selectedId === "root") return null;
 
@@ -806,50 +747,25 @@ export function SelectionOverlay({ artboardRef, scale }: SelectionOverlayProps) 
         {/* Full surface drag hit-area */}
         <div className="selection-drag-surface" onPointerDown={handleDragPointerDown} />
 
-        {/* Floating Top Badge with Drag Handle */}
+        {/* Floating Top Badge */}
         <div
           className="selection-badge"
           onPointerDown={handleDragPointerDown}
-          title={isAbsolute ? "Posicionamento Livre (Arrastar com Snap)" : "Posicionamento em Fluxo"}
+          title={isAbsolute ? "Posicionamento Livre" : "Posicionamento em Fluxo"}
         >
-          <Icon name={isAbsolute ? "move" : "grip"} size={12} />
-          <span className="selection-badge-tag">{selectedElement.tag}</span>
           <span className="selection-badge-name">{selectedElement.name}</span>
-          <button
-            type="button"
-            className="selection-badge-toggle"
-            onClick={handleTogglePositionMode}
-            title="Alternar entre modo Livre e Fluxo"
-          >
-            {isAbsolute ? "LIVRE" : "FLUXO"}
-          </button>
         </div>
 
-        {/* Dedicated Canva-Style Floating Move Button (Arrastar) */}
+        {/* Canva Move Button - Pure circular move handle directly below the element */}
         <div className={`selection-move-anchor ${isNearBottom ? "selection-move-anchor--top" : "selection-move-anchor--bottom"}`}>
           <div className="selection-move-stem" />
-          <div className="selection-move-bar">
-            <div
-              className={`selection-move-pill ${isDragging ? "is-dragging" : ""}`}
-              onPointerDown={handleDragPointerDown}
-              title={isAbsolute ? "Segure e arraste para mover livremente (Snap)" : "Segure e arraste para posicionar ou reordenar"}
-            >
-              <div className="selection-move-pill__icon">
-                <Icon name="move" size={15} />
-              </div>
-              <span className="selection-move-pill__label">
-                {isDragging ? "Movendo..." : "Arrastar"}
-              </span>
-            </div>
-
-            <button
-              type="button"
-              className={`selection-mode-toggle-btn ${isAbsolute ? "is-absolute" : "is-flow"}`}
-              onClick={handleTogglePositionMode}
-              title={isAbsolute ? "Modo Livre ativo. Clique para voltar ao Fluxo." : "Modo Fluxo ativo. Clique para tornar Livre e mover para qualquer lugar."}
-            >
-              {isAbsolute ? "LIVRE" : "FLUXO"}
-            </button>
+          <div
+            className={`selection-move-btn ${isDragging ? "is-dragging" : ""}`}
+            onPointerDown={handleDragPointerDown}
+            title="Mover elemento (Segure e arraste)"
+            aria-label="Mover elemento"
+          >
+            <Icon name="move" size={16} />
           </div>
         </div>
 

@@ -34,12 +34,9 @@ export function ElementRenderer({ element, hoveredId, setHoveredId }: Props) {
 
   const style = stylesToReactStyle(element.styles);
 
-  if (isSelected) {
-    style.outline = "2px solid #ec4899";
-    style.outlineOffset = "2px";
-  } else if (isHovered) {
-    style.outline = "1.5px dashed #f472b6";
-    style.outlineOffset = "2px";
+  if (isHovered && !isSelected) {
+    style.outline = "1.5px dashed #ec4899";
+    style.outlineOffset = "1px";
   }
   if (element.hidden) style.opacity = 0.35;
 
