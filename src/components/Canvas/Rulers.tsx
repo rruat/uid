@@ -111,46 +111,88 @@ export function Rulers({ transform, onOpenGuidesPanel }: RulersProps) {
 
   if (!showRulers) return null;
 
-  // Click on horizontal ruler -> create vertical guide (X)
-  const handleHorizontalClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  // Pointer down on horizontal ruler -> create vertical guide (X) and drag immediately onto canvas
+  const handleHorizontalPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.preventDefault();
     const rect = e.currentTarget.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
-    const artboardPos = Math.round((clickX - transform.x) / transform.scale);
+    const initialPos = Math.round((clickX - transform.x) / transform.scale);
 
     const guideSets = state.present.guideSets || [];
     const targetSet = guideSets.find((s) => s.visible) || guideSets[0];
     if (!targetSet) return;
 
+    const newGuideId = createId("guide");
     dispatch({
       type: "ADD_CUSTOM_GUIDE",
       guideSetId: targetSet.id,
       guide: {
-        id: createId("guide"),
+        id: newGuideId,
         type: "x",
-        pos: Math.max(0, artboardPos),
+        pos: Math.max(0, initialPos),
       },
     });
+
+    const onPointerMove = (moveEv: PointerEvent) => {
+      const currentClickX = moveEv.clientX - rect.left;
+      const nextPos = Math.round((currentClickX - transform.x) / transform.scale);
+      dispatch({
+        type: "UPDATE_CUSTOM_GUIDE",
+        guideSetId: targetSet.id,
+        guideId: newGuideId,
+        pos: Math.max(0, nextPos),
+      });
+    };
+
+    const onPointerUp = () => {
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+    };
+
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
   };
 
-  // Click on vertical ruler -> create horizontal guide (Y)
-  const handleVerticalClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  // Pointer down on vertical ruler -> create horizontal guide (Y) and drag immediately onto canvas
+  const handleVerticalPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.preventDefault();
     const rect = e.currentTarget.getBoundingClientRect();
     const clickY = e.clientY - rect.top;
-    const artboardPos = Math.round((clickY - transform.y) / transform.scale);
+    const initialPos = Math.round((clickY - transform.y) / transform.scale);
 
     const guideSets = state.present.guideSets || [];
     const targetSet = guideSets.find((s) => s.visible) || guideSets[0];
     if (!targetSet) return;
 
+    const newGuideId = createId("guide");
     dispatch({
       type: "ADD_CUSTOM_GUIDE",
       guideSetId: targetSet.id,
       guide: {
-        id: createId("guide"),
+        id: newGuideId,
         type: "y",
-        pos: Math.max(0, artboardPos),
+        pos: Math.max(0, initialPos),
       },
     });
+
+    const onPointerMove = (moveEv: PointerEvent) => {
+      const currentClickY = moveEv.clientY - rect.top;
+      const nextPos = Math.round((currentClickY - transform.y) / transform.scale);
+      dispatch({
+        type: "UPDATE_CUSTOM_GUIDE",
+        guideSetId: targetSet.id,
+        guideId: newGuideId,
+        pos: Math.max(0, nextPos),
+      });
+    };
+
+    const onPointerUp = () => {
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+    };
+
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
   };
 
   return (
@@ -168,8 +210,8 @@ export function Rulers({ transform, onOpenGuidesPanel }: RulersProps) {
       {/* Horizontal Top Ruler */}
       <div
         className="canvas-ruler canvas-ruler--horizontal"
-        onClick={handleHorizontalClick}
-        title="Clique para adicionar uma Guia Vertical"
+        onPointerDown={handleHorizontalPointerDown}
+        title="Clique ou arraste para posicionar uma Guia Vertical"
       >
         <canvas ref={hCanvasRef} className="canvas-ruler-canvas" />
       </div>
@@ -177,8 +219,8 @@ export function Rulers({ transform, onOpenGuidesPanel }: RulersProps) {
       {/* Vertical Left Ruler */}
       <div
         className="canvas-ruler canvas-ruler--vertical"
-        onClick={handleVerticalClick}
-        title="Clique para adicionar uma Guia Horizontal"
+        onPointerDown={handleVerticalPointerDown}
+        title="Clique ou arraste para posicionar uma Guia Horizontal"
       >
         <canvas ref={vCanvasRef} className="canvas-ruler-canvas" />
       </div>

@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Icon } from "../Icon";
 import { AddPanel } from "../BottomSheet/AddPanel";
 import { ElementTree } from "../Tree/ElementTree";
 import { GuidesPanel } from "../BottomSheet/GuidesPanel";
 import { ProjectPanel } from "../BottomSheet/ProjectPanel";
+import { registerSheetOpen } from "../../utils/sheetManager";
 import "./leftSidebar.css";
 
 export type SidebarTab = "elements" | "layers" | "guides" | "project" | null;
@@ -14,6 +15,13 @@ interface LeftSidebarProps {
 }
 
 export function LeftSidebar({ activeTab, setActiveTab }: LeftSidebarProps) {
+  useEffect(() => {
+    if (activeTab) {
+      registerSheetOpen(true);
+      return () => registerSheetOpen(false);
+    }
+  }, [activeTab]);
+
   const toggleTab = (tab: SidebarTab) => {
     setActiveTab((prev) => (prev === tab ? null : tab));
   };

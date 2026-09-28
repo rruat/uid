@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useProject } from "../../state/ProjectContext";
 import { findElement, findParent } from "../../model/document";
 import { Icon } from "../Icon";
+import { registerSheetOpen } from "../../utils/sheetManager";
 import type { ElementTag } from "../../model/types";
 import "./smartToolbar.css";
 
@@ -90,6 +91,13 @@ function ColorPickerButton({
       document.addEventListener("mousedown", handleClickOutside);
     }
     return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
+
+  useEffect(() => {
+    if (open) {
+      registerSheetOpen(true);
+      return () => registerSheetOpen(false);
+    }
   }, [open]);
 
   return (
@@ -280,6 +288,15 @@ export function SmartToolbar({ onOpenAdd, onOpenTree, onOpenGuides, onOpenProjec
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const isAnyToolbarSheetOpen = positionOpen || imageOpen || spacingOpen || borderOpen || textEditOpen;
+
+  useEffect(() => {
+    if (isAnyToolbarSheetOpen) {
+      registerSheetOpen(true);
+      return () => registerSheetOpen(false);
+    }
+  }, [isAnyToolbarSheetOpen]);
 
   const styles = selected?.styles || {};
   const id = selected?.id || "";

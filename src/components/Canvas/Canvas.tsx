@@ -45,6 +45,67 @@ export function Canvas({ onOpenGuidesPanel }: CanvasProps) {
 
   const artboardWidth = DEFAULT_VIEWPORT_WIDTHS[state.present.settings.viewport];
 
+  // Mobile: keep selected element visible in top half when a sheet opens or selection changes
+  useEffect(() => {
+    if (!state.selectedId || state.selectedId === "root" || !artboardRef.current) return;
+    if (typeof window === "undefined" || window.innerWidth > 768) return;
+
+    const checkAndFrame = () => {
+      const isSheetOpen = document.body.classList.contains("uid-sheet-open");
+      const containerH = containerRef.current?.clientHeight || (window.innerHeight * (isSheetOpen ? 0.5 : 1));
+      const domEl = artboardRef.current?.querySelector(`[data-el-id="${state.selectedId}"]`) as HTMLElement | null;
+      if (!domEl || !artboardRef.current) return;
+
+      const artRect = artboardRef.current.getBoundingClientRect();
+      const elRect = domEl.getBoundingClientRect();
+      const currentScale = transformRef.current.scale;
+      const elTopInArtboard = (elRect.top - artRect.top) / currentScale;
+      const elH = elRect.height / currentScale;
+
+      const currentScreenY = transformRef.current.y + elTopInArtboard * currentScale;
+      const bottomLimit = containerH - 35;
+      const topLimit = 15;
+
+      if (currentScreenY + elH * currentScale > bottomLimit || currentScreenY < topLimit) {
+        const targetY = Math.max(16, (containerH / 2) - ((elTopInArtboard + elH / 2) * currentScale));
+        setTransform((prev) => ({ ...prev, y: Math.round(targetY) }));
+      }
+    };
+
+    const timer = setTimeout(checkAndFrame, 80);
+    return () => clearTimeout(timer);
+  }, [state.selectedId]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const observer = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        if (m.attributeName === "class" && state.selectedId && state.selectedId !== "root") {
+          const isSheetOpen = document.body.classList.contains("uid-sheet-open");
+          if (isSheetOpen && artboardRef.current && window.innerWidth <= 768) {
+            setTimeout(() => {
+              const containerH = containerRef.current?.clientHeight || (window.innerHeight * 0.5);
+              const domEl = artboardRef.current?.querySelector(`[data-el-id="${state.selectedId}"]`) as HTMLElement | null;
+              if (!domEl || !artboardRef.current) return;
+              const artRect = artboardRef.current.getBoundingClientRect();
+              const elRect = domEl.getBoundingClientRect();
+              const currentScale = transformRef.current.scale;
+              const elTopInArtboard = (elRect.top - artRect.top) / currentScale;
+              const elH = elRect.height / currentScale;
+              const currentScreenY = transformRef.current.y + elTopInArtboard * currentScale;
+              if (currentScreenY + elH * currentScale > containerH - 30 || currentScreenY < 15) {
+                const targetY = Math.max(16, (containerH / 2) - ((elTopInArtboard + elH / 2) * currentScale));
+                setTransform((prev) => ({ ...prev, y: Math.round(targetY) }));
+              }
+            }, 100);
+          }
+        }
+      }
+    });
+    observer.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, [state.selectedId]);
+
   const clampScale = (s: number) => Math.min(3, Math.max(0.2, s));
 
   const zoomAt = useCallback((clientX: number, clientY: number, factor: number) => {

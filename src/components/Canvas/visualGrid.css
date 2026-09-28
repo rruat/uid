@@ -20,30 +20,71 @@
   position: absolute;
   pointer-events: auto;
   z-index: 45;
-  cursor: ew-resize;
   transition: opacity 0.15s ease;
 }
 
 .custom-guide-line--x {
   top: 0;
   bottom: 0;
-  width: 1px;
+  width: 1.5px;
+  cursor: ew-resize;
+}
+
+/* Full vertical span from top to bottom across entire screen/canvas */
+.custom-guide-line--x::after {
+  content: "";
+  position: absolute;
+  top: -50000px;
+  bottom: -50000px;
+  left: 0;
+  width: 1.5px;
+  background: var(--guide-color, inherit);
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+}
+
+/* Extended hit area to drag vertical guide from anywhere */
+.custom-guide-line--x::before {
+  content: "";
+  position: absolute;
+  top: -50000px;
+  bottom: -50000px;
+  left: -8px;
+  width: 17px;
+  cursor: ew-resize;
+  pointer-events: auto;
 }
 
 .custom-guide-line--y {
   left: 0;
   right: 0;
-  height: 1px;
+  height: 1.5px;
   cursor: ns-resize;
 }
 
-.custom-guide-line::before {
+/* Full horizontal span from left to right across entire screen/canvas */
+.custom-guide-line--y::after {
   content: "";
   position: absolute;
-  top: -6px;
-  bottom: -6px;
-  left: -6px;
-  right: -6px;
+  left: -50000px;
+  right: -50000px;
+  top: 0;
+  height: 1.5px;
+  background: var(--guide-color, inherit);
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+}
+
+/* Extended hit area to drag horizontal guide from anywhere */
+.custom-guide-line--y::before {
+  content: "";
+  position: absolute;
+  left: -50000px;
+  right: -50000px;
+  top: -8px;
+  height: 17px;
+  cursor: ns-resize;
+  pointer-events: auto;
 }
 
 .custom-guide-badge {

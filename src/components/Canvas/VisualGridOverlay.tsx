@@ -116,11 +116,11 @@ export function VisualGridOverlay({ scale }: VisualGridOverlayProps) {
             <div
               key={g.id}
               className={`custom-guide-line custom-guide-line--${g.type}`}
-              style={
-                isX
-                  ? { left: `${g.pos}px`, backgroundColor: color }
-                  : { top: `${g.pos}px`, backgroundColor: color }
-              }
+              style={{
+                ...(isX ? { left: `${g.pos}px` } : { top: `${g.pos}px` }),
+                backgroundColor: color,
+                ["--guide-color" as string]: color,
+              }}
               onPointerDown={(e) => handleGuideDrag(set.id, g.id, g.type, e)}
               title={`Guia ${isX ? "Vertical" : "Horizontal"}: ${g.pos}px (Arrastar para mover)`}
             >

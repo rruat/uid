@@ -19,3 +19,14 @@
   display: flex;
   overflow: hidden;
 }
+
+/* Responsive push interface when bottom sheets open on mobile */
+@media (max-width: 768px) {
+  .uid-main {
+    transition: padding-bottom 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  body.uid-sheet-open .uid-main {
+    padding-bottom: 50dvh;
+  }
+}

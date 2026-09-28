@@ -360,15 +360,15 @@
 }
 
 .smart-guide-line--x {
-  top: 0;
-  bottom: 0;
+  top: -50000px;
+  bottom: -50000px;
   width: 1.5px;
   box-shadow: 0 0 4px rgba(236, 72, 153, 0.6);
 }
 
 .smart-guide-line--y {
-  left: 0;
-  right: 0;
+  left: -50000px;
+  right: -50000px;
   height: 1.5px;
   box-shadow: 0 0 4px rgba(236, 72, 153, 0.6);
 }
