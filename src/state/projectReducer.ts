@@ -1,7 +1,9 @@
 import { createElementFromPreset, ELEMENT_PRESETS } from "../model/elementPresets";
 import {
+  DEFAULT_GUIDE_SETS,
   duplicateElement,
   findElement,
+  findParent,
   insertChild,
   moveElement,
   removeElement,
@@ -9,11 +11,21 @@ import {
 } from "../model/document";
 import { createId } from "../model/id";
 import { nextAutoAreaName } from "../model/gridUtils";
-import type { CSSProperties, UixDocument, UixSettings } from "../model/types";
+import type { CSSProperties, CustomGuide, GuideSet, UixDocument, UixSettings } from "../model/types";
 
-/** Backfills an id for documents saved before the .uix schema added one. */
+/** Backfills an id and guide sets for documents saved before the schema added them. */
 function ensureDocumentId(doc: UixDocument): UixDocument {
-  return doc.id ? doc : { ...doc, id: createId("proj") };
+  const withId = doc.id ? doc : { ...doc, id: createId("proj") };
+  if (!withId.guideSets) {
+    withId.guideSets = DEFAULT_GUIDE_SETS;
+  }
+  if (withId.settings.showRulers === undefined) {
+    withId.settings.showRulers = true;
+  }
+  if (withId.settings.smartSnap === undefined) {
+    withId.settings.smartSnap = true;
+  }
+  return withId;
 }
 
 export type Mode = "visual" | "code" | "preview";
@@ -40,6 +52,15 @@ export type ProjectAction =
   | { type: "RENAME_PROJECT"; name: string }
   | { type: "SELECT"; id: string | null }
   | { type: "SET_MODE"; mode: Mode }
+  | { type: "SET_SHOW_RULERS"; show: boolean }
+  | { type: "SET_SMART_SNAP"; snap: boolean }
+  | { type: "ADD_GUIDE_SET"; guideSet: GuideSet }
+  | { type: "UPDATE_GUIDE_SET"; id: string; patch: Partial<GuideSet> }
+  | { type: "REMOVE_GUIDE_SET"; id: string }
+  | { type: "ADD_CUSTOM_GUIDE"; guideSetId: string; guide: CustomGuide }
+  | { type: "REMOVE_CUSTOM_GUIDE"; guideSetId: string; guideId: string }
+  | { type: "UPDATE_CUSTOM_GUIDE"; guideSetId: string; guideId: string; pos: number }
+  | { type: "SET_POSITION_MODE"; id: string; positionMode: "relative" | "absolute"; left?: string; top?: string }
   | { type: "UNDO" }
   | { type: "REDO" };
 
@@ -110,10 +131,15 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
     }
 
     case "UPDATE_STYLES": {
-      const nextRoot = updateElement(state.present.root, action.id, (el) => ({
-        ...el,
-        styles: { ...el.styles, ...action.styles },
-      }));
+      const nextRoot = updateElement(state.present.root, action.id, (el) => {
+        const nextStyles = { ...el.styles, ...action.styles };
+        for (const k of Object.keys(nextStyles)) {
+          if (nextStyles[k] === "" || nextStyles[k] === undefined) {
+            delete nextStyles[k];
+          }
+        }
+        return { ...el, styles: nextStyles };
+      });
       return withHistory(state, { ...state.present, root: nextRoot });
     }
 
@@ -159,6 +185,129 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
 
     case "SET_MODE":
       return { ...state, mode: action.mode };
+
+    case "SET_SHOW_RULERS":
+      return {
+        ...state,
+        present: touch({
+          ...state.present,
+          settings: { ...state.present.settings, showRulers: action.show },
+        }),
+      };
+
+    case "SET_SMART_SNAP":
+      return {
+        ...state,
+        present: touch({
+          ...state.present,
+          settings: { ...state.present.settings, smartSnap: action.snap },
+        }),
+      };
+
+    case "ADD_GUIDE_SET": {
+      const current = state.present.guideSets || [];
+      return withHistory(state, {
+        ...state.present,
+        guideSets: [...current, action.guideSet],
+      });
+    }
+
+    case "UPDATE_GUIDE_SET": {
+      const current = state.present.guideSets || [];
+      return withHistory(state, {
+        ...state.present,
+        guideSets: current.map((s) => (s.id === action.id ? { ...s, ...action.patch } : s)),
+      });
+    }
+
+    case "REMOVE_GUIDE_SET": {
+      const current = state.present.guideSets || [];
+      return withHistory(state, {
+        ...state.present,
+        guideSets: current.filter((s) => s.id !== action.id),
+      });
+    }
+
+    case "ADD_CUSTOM_GUIDE": {
+      const current = state.present.guideSets || [];
+      return withHistory(state, {
+        ...state.present,
+        guideSets: current.map((s) =>
+          s.id === action.guideSetId ? { ...s, guides: [...s.guides, action.guide] } : s
+        ),
+      });
+    }
+
+    case "REMOVE_CUSTOM_GUIDE": {
+      const current = state.present.guideSets || [];
+      return withHistory(state, {
+        ...state.present,
+        guideSets: current.map((s) =>
+          s.id === action.guideSetId
+            ? { ...s, guides: s.guides.filter((g) => g.id !== action.guideId) }
+            : s
+        ),
+      });
+    }
+
+    case "UPDATE_CUSTOM_GUIDE": {
+      const current = state.present.guideSets || [];
+      return withHistory(state, {
+        ...state.present,
+        guideSets: current.map((s) =>
+          s.id === action.guideSetId
+            ? {
+                ...s,
+                guides: s.guides.map((g) => (g.id === action.guideId ? { ...g, pos: action.pos } : g)),
+              }
+            : s
+        ),
+      });
+    }
+
+    case "SET_POSITION_MODE": {
+      const el = findElement(state.present.root, action.id);
+      if (!el) return state;
+
+      let nextRoot = state.present.root;
+
+      if (action.positionMode === "absolute") {
+        const parent = findParent(state.present.root, action.id);
+        if (
+          parent &&
+          parent.id !== "root" &&
+          parent.styles.position !== "relative" &&
+          parent.styles.position !== "absolute"
+        ) {
+          nextRoot = updateElement(nextRoot, parent.id, (p) => ({
+            ...p,
+            styles: { ...p.styles, position: "relative" },
+          }));
+        }
+
+        nextRoot = updateElement(nextRoot, action.id, (target) => ({
+          ...target,
+          styles: {
+            ...target.styles,
+            position: "absolute",
+            left: action.left || target.styles.left || "16px",
+            top: action.top || target.styles.top || "16px",
+          },
+        }));
+      } else {
+        nextRoot = updateElement(nextRoot, action.id, (target) => {
+          const nextStyles = { ...target.styles };
+          nextStyles.position = "relative";
+          delete nextStyles.left;
+          delete nextStyles.top;
+          delete nextStyles.right;
+          delete nextStyles.bottom;
+          return { ...target, styles: nextStyles };
+        });
+      }
+
+      return withHistory(state, { ...state.present, root: nextRoot });
+    }
 
     case "UNDO": {
       if (state.past.length === 0) return state;

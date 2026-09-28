@@ -1,0 +1,297 @@
+/* Canva-style Navigation Rail and Slide-out Drawer */
+.canva-sidebar-root {
+  display: flex;
+  height: 100%;
+  position: relative;
+  z-index: 30;
+  flex-shrink: 0;
+}
+
+.canva-nav-rail {
+  width: 70px;
+  background: var(--surface);
+  border-right: 1.5px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-3) 0;
+  gap: var(--space-2);
+  user-select: none;
+}
+
+.canva-rail-btn {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.14s ease;
+  padding: 0;
+}
+
+.canva-rail-btn:hover {
+  background: var(--surface-alt);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.canva-rail-btn.is-active {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.canva-rail-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.canva-rail-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* Slide-out Drawer */
+.canva-drawer {
+  width: 320px;
+  background: var(--surface);
+  border-right: 1.5px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 6px 0 24px rgba(0, 0, 0, 0.06);
+  animation: drawerSlideIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  z-index: 35;
+}
+
+@keyframes drawerSlideIn {
+  from {
+    width: 0;
+    opacity: 0;
+  }
+  to {
+    width: 320px;
+    opacity: 1;
+  }
+}
+
+.canva-drawer__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1.5px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
+.canva-drawer__title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.canva-drawer__close-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  transition: all 0.12s ease;
+}
+
+.canva-drawer__close-btn:hover {
+  background: var(--surface-alt);
+  color: var(--text);
+}
+
+.canva-drawer__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-4);
+}
+
+/* Add Panel inside Drawer */
+.add-panel__header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: var(--space-3);
+}
+
+.add-panel__hint {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.add-panel__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.add-panel__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 84px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: grab;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.add-panel__item:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.add-panel__item:active {
+  cursor: grabbing;
+}
+
+.add-panel__item-label {
+  font-size: 12px;
+}
+
+/* Backdrop for drawer (hidden on desktop, active on mobile) */
+.canva-drawer-backdrop {
+  display: none;
+}
+
+.canva-drawer__handle {
+  display: none;
+}
+
+/* =========================================================================
+   MOBILE-FIRST ADAPTATIONS (Canva Mobile Bottom Sheet Drawer)
+   ========================================================================= */
+
+@media (max-width: 768px) {
+  .canva-sidebar-root {
+    position: static;
+  }
+
+  /* Hide vertical rail on mobile to dedicate 100% width to canvas */
+  .canva-nav-rail {
+    display: none !important;
+  }
+
+  /* Full screen dim backdrop */
+  .canva-drawer-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 140;
+    backdrop-filter: blur(2px);
+    animation: drawerFadeIn 0.18s ease-out;
+  }
+
+  @keyframes drawerFadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* Slide-up bottom sheet */
+  .canva-drawer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto;
+    width: 100% !important;
+    max-height: 82vh;
+    border-radius: 20px 20px 0 0;
+    border-right: none;
+    border-left: none;
+    border-bottom: none;
+    border-top: 1.5px solid var(--border);
+    box-shadow: 0 -12px 36px rgba(0, 0, 0, 0.28);
+    z-index: 150;
+    animation: slideUpMobileDrawer 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
+  }
+
+  @keyframes slideUpMobileDrawer {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  /* Visual drag handle on mobile */
+  .canva-drawer__handle {
+    display: block;
+    width: 38px;
+    height: 4px;
+    border-radius: 999px;
+    background: var(--border-strong);
+    margin: 10px auto 4px auto;
+    flex-shrink: 0;
+  }
+
+  .canva-drawer__header {
+    padding: var(--space-2) var(--space-4) var(--space-3) var(--space-4);
+  }
+
+  .canva-drawer__title {
+    font-size: 15px;
+  }
+
+  .canva-drawer__close-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .canva-drawer__body {
+    padding: var(--space-3) var(--space-4);
+    max-height: calc(82vh - 60px);
+  }
+
+  /* Large touch targets in Add Panel */
+  .add-panel__grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .add-panel__item {
+    height: 90px;
+    border-radius: var(--radius-lg);
+  }
+
+  .add-panel__item-label {
+    font-size: 13px;
+  }
+}
+

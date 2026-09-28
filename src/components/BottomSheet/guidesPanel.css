@@ -1,0 +1,245 @@
+/* Guides, Rulers & Grid Management Panel */
+.guides-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding-bottom: var(--space-4);
+}
+
+.guides-master-switches {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+  padding-bottom: var(--space-3);
+  border-bottom: 1.5px solid var(--border);
+}
+
+.guides-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 42px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.guides-toggle-btn:hover {
+  background: var(--surface-alt);
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+.guides-toggle-btn.is-active {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Guide Sets List */
+.guides-sets-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+}
+
+.guides-sets-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.guide-set-card {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+  transition: border-color 0.15s ease;
+}
+
+.guide-set-card.is-inactive {
+  opacity: 0.65;
+}
+
+.guide-set-card__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.guide-set-color-chip {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1.5px solid rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.guide-set-name-input {
+  flex: 1;
+  border: 1px solid transparent;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  padding: 3px 6px;
+  border-radius: var(--radius-sm);
+  min-width: 0;
+}
+
+.guide-set-name-input:focus {
+  outline: none;
+  background: var(--surface-alt);
+  border-color: var(--accent);
+}
+
+.guide-set-card__actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Grid & Guide Subsections */
+.guide-subsection {
+  background: var(--surface-alt);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.guide-subsection__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.guide-presets-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.guide-preset-pill {
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.guide-preset-pill:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.guide-preset-pill.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+
+/* Manual Guides Item */
+.manual-guides-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.manual-guide-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  gap: 8px;
+}
+
+.manual-guide-tag {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  width: 24px;
+}
+
+.manual-guide-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.manual-guide-stepper {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-alt);
+  overflow: hidden;
+  height: 26px;
+}
+
+.manual-guide-stepper button {
+  width: 20px;
+  height: 100%;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.manual-guide-stepper button:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.manual-guide-stepper input {
+  width: 52px;
+  height: 100%;
+  border: none;
+  background: none;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.manual-guide-stepper input:focus {
+  outline: none;
+}
+
+/* Scope Selector */
+.guide-scope-select {
+  height: 30px;
+  font-size: 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  padding: 0 8px;
+}

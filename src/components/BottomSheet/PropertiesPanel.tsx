@@ -3,7 +3,7 @@ import { findParent } from "../../model/document";
 import type { UixElement } from "../../model/types";
 import { useProject } from "../../state/ProjectContext";
 import { GridEditor } from "./GridEditor";
-import { BoxField, ColorField, SelectField, SizeSlider, TextField, UnitField } from "./StyleField";
+import { BoxField, ColorField, SelectField, TextField, UnitField } from "./StyleField";
 
 /** Sets width and height to whichever of the two is currently a real
  * (non-keyword) size, so one tap makes the element square. */
@@ -120,7 +120,6 @@ export function PropertiesPanel({
                 value={styles.width}
                 keywords={["auto", "fit-content", "min-content", "max-content"]}
               />
-              <SizeSlider id={id} prop="width" value={styles.width} />
             </div>
             <div className="ui-field">
               <UnitField
@@ -130,7 +129,6 @@ export function PropertiesPanel({
                 value={styles.height}
                 keywords={["auto", "fit-content", "min-content", "max-content"]}
               />
-              <SizeSlider id={id} prop="height" value={styles.height} />
             </div>
             <button
               className="ui-btn"

@@ -6,11 +6,15 @@
   background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
   background-size: 20px 20px;
   touch-action: none;
+  user-select: none;
 }
 
 .uid-canvas__surface {
   transform-origin: 0 0;
   will-change: transform;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 .uid-artboard {
@@ -18,12 +22,10 @@
   background: var(--bg);
   border: 1.5px solid var(--border-strong);
   border-radius: var(--radius-lg);
-  overflow: hidden;
+  position: relative;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
 }
 
-/* Free-form: hugs the content (e.g. a single card) instead of forcing a
-   full device-page frame — no fixed width/height, and no artboard chrome
-   (background/border) either, so the element sits raw on the canvas. */
 .uid-artboard--free {
   display: inline-block;
   width: max-content;
@@ -31,20 +33,529 @@
   background: transparent;
   border: none;
   border-radius: 0;
-  overflow: visible;
+  box-shadow: none;
 }
 
 .uid-canvas__zoom {
   position: absolute;
-  right: var(--space-3);
-  top: var(--space-3);
+  right: var(--space-4);
+  bottom: var(--space-4);
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-1);
+  padding: 4px 8px;
   border: 1.5px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: 999px;
   background: var(--surface);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   font-size: 12px;
+  font-weight: 600;
   color: var(--text-muted);
+  z-index: 15;
 }
+
+/* Canvas Overlay System */
+.canvas-overlay-root {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+}
+
+/* Selected Element Bounding Box */
+.selection-bounding-box {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: auto;
+  touch-action: none;
+  cursor: grab;
+  border: 2px solid var(--selection-pink, #ec4899);
+  box-sizing: border-box;
+  transition: opacity 0.1s ease;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.selection-bounding-box.is-dragging {
+  opacity: 0.9;
+  border-style: dashed;
+  cursor: grabbing;
+}
+
+/* Inner drag surface covering entire element area - safe from handle intrusion */
+.selection-drag-surface {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.001);
+  cursor: grab;
+  touch-action: none;
+  z-index: 10;
+}
+
+.selection-bounding-box.is-dragging .selection-drag-surface {
+  cursor: grabbing;
+}
+
+/* Floating Badge with Drag Handle */
+.selection-badge {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  background: var(--selection-pink, #ec4899);
+  color: #ffffff;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: grab;
+  pointer-events: auto;
+  touch-action: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  user-select: none;
+  white-space: nowrap;
+  z-index: 30;
+}
+
+.selection-badge:active {
+  cursor: grabbing;
+}
+
+.selection-badge-tag {
+  opacity: 0.85;
+  text-transform: uppercase;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.selection-badge-name {
+  font-weight: 600;
+}
+
+.selection-badge-toggle {
+  margin-left: 3px;
+  background: rgba(255, 255, 255, 0.22);
+  border: none;
+  border-radius: 999px;
+  padding: 1px 6px;
+  font-size: 9px;
+  font-weight: 800;
+  color: #ffffff;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: background 0.15s ease;
+}
+
+.selection-badge-toggle:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+/* Dedicated Canva-Style Floating Move Button (Arrastar) */
+.selection-move-anchor {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  z-index: 40;
+}
+
+.selection-move-anchor--bottom {
+  top: 100%;
+}
+
+.selection-move-anchor--top {
+  bottom: 100%;
+  flex-direction: column-reverse;
+}
+
+.selection-move-stem {
+  width: 1.5px;
+  height: 12px;
+  background: var(--selection-pink, #ec4899);
+  pointer-events: none;
+}
+
+.selection-move-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--surface, #ffffff);
+  border: 1.5px solid var(--selection-pink, #ec4899);
+  border-radius: 999px;
+  padding: 3px 5px;
+  box-shadow: 0 4px 16px rgba(236, 72, 153, 0.28), 0 2px 6px rgba(0, 0, 0, 0.12);
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.selection-move-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background: var(--selection-pink, #ec4899);
+  color: #ffffff;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: grab;
+  touch-action: none;
+  transition: transform 0.12s ease, background 0.12s ease;
+  white-space: nowrap;
+}
+
+.selection-move-pill:hover {
+  background: #db2777;
+}
+
+.selection-move-pill:active,
+.selection-move-pill.is-dragging {
+  cursor: grabbing;
+  background: #be185d;
+  transform: scale(1.05);
+}
+
+.selection-move-pill__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.selection-mode-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface-alt);
+  color: var(--text-muted);
+  transition: all 0.15s ease;
+}
+
+.selection-mode-toggle-btn.is-absolute {
+  background: rgba(236, 72, 153, 0.12);
+  color: var(--selection-pink, #ec4899);
+  border-color: rgba(236, 72, 153, 0.35);
+}
+
+.selection-mode-toggle-btn.is-flow {
+  background: var(--surface-alt);
+  color: var(--text-muted);
+  border-color: var(--border);
+}
+
+.selection-mode-toggle-btn:hover {
+  transform: scale(1.04);
+}
+
+/* Dimension Tooltip during resizing */
+.selection-dimension-tooltip {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(4px);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Corner Resize Handles */
+.resize-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #ffffff;
+  border: 2px solid var(--selection-pink, #ec4899);
+  border-radius: 2px;
+  pointer-events: auto;
+  touch-action: none;
+  box-sizing: border-box;
+  z-index: 20;
+}
+
+/* Touch hit areas offset outwards away from element center */
+.resize-handle::after {
+  content: "";
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  pointer-events: auto;
+}
+
+.resize-handle--nw {
+  top: -5px;
+  left: -5px;
+  cursor: nwse-resize;
+}
+.resize-handle--nw::after {
+  bottom: -2px;
+  right: -2px;
+}
+
+.resize-handle--ne {
+  top: -5px;
+  right: -5px;
+  cursor: nesw-resize;
+}
+.resize-handle--ne::after {
+  bottom: -2px;
+  left: -2px;
+}
+
+.resize-handle--se {
+  bottom: -5px;
+  right: -5px;
+  cursor: nwse-resize;
+}
+.resize-handle--se::after {
+  top: -2px;
+  left: -2px;
+}
+
+.resize-handle--sw {
+  bottom: -5px;
+  left: -5px;
+  cursor: nesw-resize;
+}
+.resize-handle--sw::after {
+  top: -2px;
+  right: -2px;
+}
+
+/* Edge Resize Handles */
+.resize-handle-edge {
+  position: absolute;
+  background: #ffffff;
+  border: 1.5px solid var(--selection-pink, #ec4899);
+  border-radius: 999px;
+  pointer-events: auto;
+  touch-action: none;
+  box-sizing: border-box;
+  z-index: 20;
+}
+
+.resize-handle-edge::after {
+  content: "";
+  position: absolute;
+  pointer-events: auto;
+}
+
+.resize-handle--n {
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 18px;
+  height: 6px;
+  cursor: ns-resize;
+}
+.resize-handle--n::after {
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28px;
+  height: 18px;
+}
+
+.resize-handle--s {
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 18px;
+  height: 6px;
+  cursor: ns-resize;
+}
+.resize-handle--s::after {
+  top: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28px;
+  height: 18px;
+}
+
+.resize-handle--w {
+  left: -4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 18px;
+  cursor: ew-resize;
+}
+.resize-handle--w::after {
+  right: -2px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 28px;
+}
+
+.resize-handle--e {
+  right: -4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 18px;
+  cursor: ew-resize;
+}
+.resize-handle--e::after {
+  left: -2px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 28px;
+}
+
+/* Smart Alignment Guides (Canva magenta snap lines) */
+.smart-guide-line {
+  position: absolute;
+  pointer-events: none;
+  z-index: 60;
+  background: #ec4899;
+}
+
+.smart-guide-line--x {
+  top: 0;
+  bottom: 0;
+  width: 1.5px;
+  box-shadow: 0 0 4px rgba(236, 72, 153, 0.6);
+}
+
+.smart-guide-line--y {
+  left: 0;
+  right: 0;
+  height: 1.5px;
+  box-shadow: 0 0 4px rgba(236, 72, 153, 0.6);
+}
+
+/* Drop Target Insertion Indicator Line */
+.drop-indicator-line {
+  position: absolute;
+  background: #0284c7;
+  pointer-events: none;
+  z-index: 70;
+  box-shadow: 0 0 6px rgba(2, 132, 199, 0.8);
+  border-radius: 999px;
+}
+
+.drop-indicator-dot {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #0284c7;
+  border: 1.5px solid #ffffff;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.drop-indicator-dot--start {
+  left: -3px;
+}
+
+.drop-indicator-dot--end {
+  right: -3px;
+}
+
+.drop-indicator--vertical .drop-indicator-dot--start {
+  left: 50%;
+  top: -3px;
+  transform: translateX(-50%);
+}
+
+.drop-indicator--vertical .drop-indicator-dot--end {
+  left: 50%;
+  top: auto;
+  bottom: -3px;
+  transform: translateX(-50%);
+}
+
+/* Canvas Inline Text Editor */
+.canvas-inline-editor {
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  color: inherit;
+  text-align: inherit;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+
+/* =========================================================================
+   MOBILE-FIRST CANVAS ADAPTATIONS
+   ========================================================================= */
+
+@media (max-width: 768px) {
+  /* Move zoom floating pill to top right so it doesn't clash with bottom toolbar */
+  .uid-canvas__zoom {
+    top: 12px;
+    right: 12px;
+    bottom: auto;
+    padding: 3px 6px;
+    font-size: 11px;
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  }
+
+  /* Extra space at bottom of artboard on mobile to account for fixed toolbar */
+  .uid-artboard {
+    margin-bottom: 90px;
+  }
+
+  /* Mobile touch hit areas for selection handles - constrained outwards */
+  .resize-handle {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+  }
+
+  .resize-handle::after {
+    width: 26px;
+    height: 26px;
+  }
+
+  .selection-badge {
+    padding: 4px 8px;
+    font-size: 11px;
+    border-radius: var(--radius-sm);
+    bottom: calc(100% + 7px);
+  }
+
+  .selection-move-bar {
+    padding: 4px 7px;
+    gap: 6px;
+  }
+
+  .selection-move-pill {
+    padding: 6px 14px;
+    font-size: 12px;
+  }
+
+  .selection-mode-toggle-btn {
+    padding: 4px 9px;
+    font-size: 11px;
+  }
+}
+

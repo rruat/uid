@@ -36,6 +36,8 @@ export interface UixElement {
   hidden?: boolean;
 }
 
+export type Viewport = "mobile" | "tablet" | "desktop" | "free";
+
 export interface UixVariable {
   name: string;
   value: string;
@@ -48,11 +50,38 @@ export interface UixAsset {
   dataUrl: string;
 }
 
-export type Viewport = "mobile" | "tablet" | "desktop" | "free";
+export interface CustomGuide {
+  id: string;
+  type: "x" | "y"; // x = vertical guide line, y = horizontal guide line
+  pos: number; // coordinate in px relative to scope (artboard or container)
+}
+
+export interface GridConfig {
+  enabled: boolean;
+  size: number; // interval in px (e.g. 8, 16, 24)
+  orientation: "both" | "horizontal" | "vertical";
+  color: string;
+  opacity: number;
+  thickness: number;
+  snap: boolean;
+}
+
+export interface GuideSet {
+  id: string;
+  name: string;
+  color: string;
+  visible: boolean;
+  snapEnabled: boolean;
+  scope: "global" | string; // "global" or container element ID
+  grid: GridConfig;
+  guides: CustomGuide[];
+}
 
 export interface UixSettings {
   canvasBackground?: string;
   viewport: Viewport;
+  showRulers?: boolean;
+  smartSnap?: boolean;
 }
 
 export interface UixDocument {
@@ -64,6 +93,7 @@ export interface UixDocument {
   settings: UixSettings;
   variables: UixVariable[];
   assets: UixAsset[];
+  guideSets?: GuideSet[];
   root: UixElement;
 }
 

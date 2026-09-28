@@ -1,5 +1,47 @@
 import { createId } from "./id";
-import type { UixDocument, UixElement } from "./types";
+import type { GuideSet, UixDocument, UixElement } from "./types";
+
+export const DEFAULT_GUIDE_SETS: GuideSet[] = [
+  {
+    id: "set-layout",
+    name: "Layout Geral",
+    color: "#6366f1",
+    visible: true,
+    snapEnabled: true,
+    scope: "global",
+    grid: {
+      enabled: true,
+      size: 16,
+      orientation: "both",
+      color: "rgba(99, 102, 241, 0.18)",
+      opacity: 0.18,
+      thickness: 1,
+      snap: true,
+    },
+    guides: [
+      { id: "g-left-margin", type: "x", pos: 16 },
+      { id: "g-right-margin", type: "x", pos: 374 },
+    ],
+  },
+  {
+    id: "set-cards",
+    name: "Cards & Componentes",
+    color: "#ec4899",
+    visible: true,
+    snapEnabled: true,
+    scope: "global",
+    grid: {
+      enabled: false,
+      size: 8,
+      orientation: "both",
+      color: "rgba(236, 72, 153, 0.18)",
+      opacity: 0.18,
+      thickness: 1,
+      snap: true,
+    },
+    guides: [],
+  },
+];
 
 export function createDefaultDocument(name = "Novo Projeto"): UixDocument {
   const now = new Date().toISOString();
@@ -9,9 +51,10 @@ export function createDefaultDocument(name = "Novo Projeto"): UixDocument {
     name,
     createdAt: now,
     updatedAt: now,
-    settings: { viewport: "mobile" },
+    settings: { viewport: "mobile", showRulers: true, smartSnap: true },
     variables: [],
     assets: [],
+    guideSets: DEFAULT_GUIDE_SETS,
     root: {
       id: "root",
       tag: "main",
@@ -20,6 +63,7 @@ export function createDefaultDocument(name = "Novo Projeto"): UixDocument {
         display: "flex",
         "flex-direction": "column",
         "min-height": "100%",
+        position: "relative",
         gap: "16px",
         padding: "16px",
       },

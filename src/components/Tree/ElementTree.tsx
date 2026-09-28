@@ -5,14 +5,29 @@ import { useProject } from "../../state/ProjectContext";
 import { Icon } from "../Icon";
 import "./elementTree.css";
 
-export function ElementTree({ onClose }: { onClose: () => void }) {
+export function ElementTree({
+  onClose,
+  isEmbedded = false,
+}: {
+  onClose: () => void;
+  isEmbedded?: boolean;
+}) {
   const { state } = useProject();
+
+  if (isEmbedded) {
+    return (
+      <div className="tree-embedded">
+        <TreeNode element={state.present.root} depth={0} />
+      </div>
+    );
+  }
+
   return (
     <div className="tree-overlay" onClick={onClose}>
       <div className="tree-panel" onClick={(e) => e.stopPropagation()}>
         <div className="tree-panel__header">
           <span className="ui-label">Estrutura</span>
-          <button className="ui-btn is-icon" onClick={onClose}>
+          <button type="button" className="ui-btn is-icon" onClick={onClose}>
             <Icon name="x" size={16} />
           </button>
         </div>
@@ -61,11 +76,12 @@ function TreeNode({ element, depth }: { element: UixElement; depth: number }) {
     <div className="tree-node">
       <div
         className={`tree-node__row ${isSelected ? "is-selected" : ""}`}
-        style={{ paddingLeft: 8 + depth * 16 }}
+        style={{ paddingLeft: 8 + depth * 14 }}
         onClick={() => dispatch({ type: "SELECT", id: element.id })}
       >
         {element.children.length > 0 ? (
           <button
+            type="button"
             className="tree-node__caret"
             onClick={(e) => {
               e.stopPropagation();
@@ -82,27 +98,53 @@ function TreeNode({ element, depth }: { element: UixElement; depth: number }) {
 
         {!isRoot && (
           <div className="tree-node__actions">
-            <button className="ui-btn is-icon" onClick={(e) => { e.stopPropagation(); outdent(); }} title="Diminuir nível">
+            <button
+              type="button"
+              className="ui-btn is-icon"
+              style={{ width: 24, height: 24, padding: 0 }}
+              onClick={(e) => { e.stopPropagation(); outdent(); }}
+              title="Diminuir nível"
+            >
               ←
             </button>
-            <button className="ui-btn is-icon" onClick={(e) => { e.stopPropagation(); indent(); }} title="Aumentar nível">
+            <button
+              type="button"
+              className="ui-btn is-icon"
+              style={{ width: 24, height: 24, padding: 0 }}
+              onClick={(e) => { e.stopPropagation(); indent(); }}
+              title="Aumentar nível"
+            >
               →
             </button>
-            <button className="ui-btn is-icon" onClick={(e) => { e.stopPropagation(); move(-1); }} title="Mover para cima">
+            <button
+              type="button"
+              className="ui-btn is-icon"
+              style={{ width: 24, height: 24, padding: 0 }}
+              onClick={(e) => { e.stopPropagation(); move(-1); }}
+              title="Mover para cima"
+            >
               ↑
             </button>
-            <button className="ui-btn is-icon" onClick={(e) => { e.stopPropagation(); move(1); }} title="Mover para baixo">
+            <button
+              type="button"
+              className="ui-btn is-icon"
+              style={{ width: 24, height: 24, padding: 0 }}
+              onClick={(e) => { e.stopPropagation(); move(1); }}
+              title="Mover para baixo"
+            >
               ↓
             </button>
             <button
+              type="button"
               className="ui-btn is-icon"
+              style={{ width: 24, height: 24, padding: 0 }}
               onClick={(e) => {
                 e.stopPropagation();
                 dispatch({ type: "REMOVE_ELEMENT", id: element.id });
               }}
               title="Excluir"
             >
-              <Icon name="trash" size={14} />
+              <Icon name="trash" size={13} />
             </button>
           </div>
         )}

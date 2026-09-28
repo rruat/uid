@@ -221,43 +221,100 @@ export function UnitField({
 }
 
 /**
- * A slider alternative for a numeric length field (e.g. width/height), so
- * a dimension can be dragged instead of typed. Steps in multiples of 4 for
- * px/rem/em (matching common spacing scales); 1 for %, since 4% steps are
- * too coarse. Disabled while the field holds a keyword (auto, fit-content).
+ * A Canva-style numeric stepper with [-] and [+] buttons, direct text input,
+ * and optional quick preset chips (replacing previous range sliders).
  */
-export function SizeSlider({
+export function NumericStepper({
   id,
   prop,
+  label,
   value,
-  max = 800,
+  step = 4,
+  min = 0,
+  max,
+  defaultUnit = "px",
+  quickPresets,
 }: {
   id: string;
   prop: string;
+  label?: string;
   value: string | undefined;
+  step?: number;
+  min?: number;
   max?: number;
+  defaultUnit?: string;
+  quickPresets?: string[];
 }) {
   const commit = useStyleCommit(id);
   const parsed = parseUnitValue(value);
-  if (parsed.mode === "keyword") return null;
+  const num = parsed.mode === "number" && parsed.number !== "" ? parseFloat(parsed.number) : 0;
+  const unit = parsed.mode === "number" ? (parsed.unit || defaultUnit) : defaultUnit;
 
-  const unit = parsed.number === "" ? "px" : parsed.unit;
-  const step = unit === "%" ? 1 : 4;
-  const sliderMax = unit === "%" ? 100 : max;
-  const numeric = Math.min(sliderMax, Math.max(0, parseFloat(parsed.number || "0") || 0));
+  const update = (delta: number) => {
+    let next = (isNaN(num) ? 0 : num) + delta;
+    if (min !== undefined) next = Math.max(min, next);
+    if (max !== undefined) next = Math.min(max, next);
+    commit({ [prop]: `${next}${unit}` });
+  };
 
   return (
-    <input
-      className="size-slider"
-      type="range"
-      min={0}
-      max={sliderMax}
-      step={step}
-      value={numeric}
-      onChange={(e) => commit({ [prop]: `${e.target.value}${unit}` })}
-    />
+    <div className="ui-stepper-field">
+      {label && <span className="ui-label">{label}</span>}
+      <div className="ui-stepper">
+        <button
+          type="button"
+          className="ui-stepper-btn"
+          onClick={() => update(-step)}
+          title="Diminuir"
+        >
+          −
+        </button>
+        <input
+          className="ui-stepper-input"
+          value={parsed.mode === "keyword" ? parsed.keyword : (value ?? "")}
+          placeholder="0px"
+          onChange={(e) => commit({ [prop]: e.target.value })}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowUp") {
+              e.preventDefault();
+              update(step);
+            } else if (e.key === "ArrowDown") {
+              e.preventDefault();
+              update(-step);
+            } else if (e.key === "Enter") {
+              (e.target as HTMLInputElement).blur();
+            }
+          }}
+        />
+        <button
+          type="button"
+          className="ui-stepper-btn"
+          onClick={() => update(step)}
+          title="Aumentar"
+        >
+          +
+        </button>
+      </div>
+      {quickPresets && quickPresets.length > 0 && (
+        <div className="ui-stepper-presets">
+          {quickPresets.map((p) => (
+            <button
+              key={p}
+              type="button"
+              className={`preset-pill ${value === p ? "is-active" : ""}`}
+              onClick={() => commit({ [prop]: p })}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
+
+/** Backward-compatible alias replacing the former range slider with the new stepper */
+export const SizeSlider = NumericStepper;
 
 export function BoxField({
   id,

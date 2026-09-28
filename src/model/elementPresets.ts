@@ -24,7 +24,7 @@ export const ELEMENT_PRESETS: ElementPreset[] = [
       gap: "12px",
       padding: "16px",
       width: "100%",
-      "min-height": "80px",
+      height: "80px",
     },
   },
   {
@@ -36,7 +36,7 @@ export const ELEMENT_PRESETS: ElementPreset[] = [
     defaultStyles: {
       display: "block",
       width: "100%",
-      "min-height": "40px",
+      height: "40px",
     },
   },
   {
